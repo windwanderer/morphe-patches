@@ -1,7 +1,6 @@
 group = "app.template"
 
 patches {
-    // TODO: Update this section with your project details.
     about {
         name = "WindWanderer Patches"
         description = "Patches for apps I like"
