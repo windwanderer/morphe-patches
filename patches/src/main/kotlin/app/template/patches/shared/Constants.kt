@@ -7,8 +7,8 @@ import app.morphe.patcher.patch.SupportedAbi
 
 object Constants {
     val COMPATIBILITY_EXAMPLE = Compatibility(
-        name = "Car Scanner", // App name as it appears in the Android launcher.
-        packageName = "com.ovz.carscanner",
+        name = "MetService", // App name as it appears in the Android launcher.
+        packageName = "com.metservice.kryten",
         apkFileType = ApkFileType.APK, // Preferred or recommended file type.
         appIconColor = 0xFF0045, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
@@ -23,7 +23,7 @@ object Constants {
             // redirect users to these sites. If an app version is not available
             // on ApkMirror or UpToDown, then the user will be sent to Google search.
             AppTarget(
-                version = "2.1.50"
+                version = "2.33.0"
             )
         )
     )
