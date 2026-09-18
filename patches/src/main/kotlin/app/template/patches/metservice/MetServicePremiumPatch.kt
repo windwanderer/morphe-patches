@@ -4,17 +4,16 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
 
 @Suppress("unused")
-val metServicePremiumPatch = bytecodePatch(
-    name = "MetService Premium Patch",
-    description = "Modify AppState premium state.",
+val metServiceSplashAdPatch = bytecodePatch(
+    name = "Disable MetService Splash Ad",
+    description = "Disable the splash screen advertisement.",
     default = true
 ) {
     execute {
-        AppStateTFingerprint.method.addInstructions(
+        SplashControllerZ1Fingerprint.method.addInstructions(
             0,
             """
-                const/4 v0, 0x1
-                return v0
+                return-void
             """
         )
     }
