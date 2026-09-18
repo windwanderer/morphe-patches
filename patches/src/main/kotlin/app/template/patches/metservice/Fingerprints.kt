@@ -1,22 +1,22 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
-import app.morphe.patcher.string
-import app.morphe.patcher.literal
 import app.morphe.patcher.methodCall
-import app.morphe.patcher.fieldAccess
-import app.morphe.patcher.opcode
-import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
-import com.android.tools.smali.dexlib2.AccessFlags
-import com.android.tools.smali.dexlib2.Opcode
+import app.morphe.patcher.string
 
 object AppStateTFingerprint : Fingerprint(
     definingClass = "Lcom/metservice/kryten/AppState;",
-    name = "t",
     returnType = "Z",
-    accessFlags = listOf(AccessFlags.PUBLIC),
-
+    parameters = emptyList(),
     filters = listOf(
-        string("premium_ad_free_enabled")
+        methodCall(
+            definingClass = "Lcom/metservice/kryten/util/SubscriptionState;",
+            name = "c",
+        ),
+        string("premium_ad_free_enabled"),
+        methodCall(
+            definingClass = "Landroid/content/SharedPreferences;",
+            name = "getBoolean",
+        ),
     )
 )

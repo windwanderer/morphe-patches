@@ -1,17 +1,19 @@
 package app.template.patches.metservice
 
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
-import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
+import app.template.patches.shared.Constants.COMPATIBILITY_MET_SERVICE
 
-val MetServicePremiumPatch = bytecodePatch(
-    name = "MetService Premium Unlock",
-    description = "Force AppState.t() to always return true.",
+@Suppress("unused")
+val metServicePremiumPatch = bytecodePatch(
+    name = "MetService Premium Patch",
+    description = "Modify AppState premium state.",
     default = true
 ) {
-    execute {
-        val method = AppStateTFingerprint.method
+    compatibleWith(COMPATIBILITY_MET_SERVICE)
 
-        method.replaceInstructions(
+    execute {
+        AppStateTFingerprint.method.addInstructions(
             0,
             """
                 const/4 v0, 0x1
