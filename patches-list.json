@@ -1,10 +1,10 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.1.0",
+  "version": "1.2.0-dev.1",
   "patches": [
     {
-      "name": "CarScanner Premium Unlock",
-      "description": "Force Google Billing PurchaseState to PURCHASED for Car Scanner",
+      "name": "MetService Premium Unlock",
+      "description": "Force BillingStatus.a() to always return true.",
       "default": false,
       "category": null,
       "dependencies": [],
