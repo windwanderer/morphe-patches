@@ -4,8 +4,9 @@ import app.morphe.patcher.Fingerprint
 import com.android.tools.smali.dexlib2.AccessFlags
 
 object AppStateTFingerprint : Fingerprint(
-    definingClass = "Lcom/metservice/kryten/AppState;",
+    definingClass = ":com/metservice/kryten/",
     name = "t",
-    returnType = "Z",
-    accessFlags = listOf(AccessFlags.PUBLIC)
+    filters = listOf(
+        string("premium_ad_free_enabled")
+    )
 )
