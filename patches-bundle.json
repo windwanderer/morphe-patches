@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-18T22:29:40",
-  "description": "## [1.5.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.1...v1.5.0-dev.2) (2026-09-18)\n\n### ✨ New Features\n\n* update MetService patch ([b172f2e](https://github.com/windwanderer/morphe-patches/commit/b172f2e62e0491d1fb8c4dd943614438996a69b3))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.2/patches-1.5.0-dev.2.mpp",
+  "created_at": "2026-09-18T22:54:38",
+  "description": "## [1.5.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.2...v1.5.0-dev.3) (2026-09-18)\n\n### ✨ New Features\n\n* update MetService patch ([056a2d1](https://github.com/windwanderer/morphe-patches/commit/056a2d1bbb9a5bab5610e0f49ea9962152ad9c35))\n* update MetService patch ([1b40a00](https://github.com/windwanderer/morphe-patches/commit/1b40a000d9dbc55d8c98fc0ed723ce0afd15a393))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.3/patches-1.5.0-dev.3.mpp",
   "signature_download_url": "",
-  "version": "1.5.0-dev.2"
+  "version": "1.5.0-dev.3"
 }
