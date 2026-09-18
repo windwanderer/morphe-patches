@@ -3,9 +3,9 @@ group = "app.template"
 patches {
     // TODO: Update this section with your project details.
     about {
-        name = "UserXYZ Patches"
+        name = "WindWanderer Patches"
         description = "Patches for apps I like"
-        source = "git@github.com:UserXYZ/morphe-patches.git"
+        source = "git@github.com:windwanderer/morphe-patches.git"
         author = "Awesome dev"
         contact = "na"
         website = "na"
