@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-18T03:47:38",
-  "description": "## 1.0.0-dev.1 (2026-09-18)\n\n### 🐛 Bug Fixes\n\n* add missing import ([8195d03](https://github.com/windwanderer/morphe-patches/commit/8195d034b7f0c7daa16156ad5f5211256b572607))\n* update patch ([93a8612](https://github.com/windwanderer/morphe-patches/commit/93a861278510dc629fbcc1e0243975d7718f4d58))\n* update patch to new ([ed0f2df](https://github.com/windwanderer/morphe-patches/commit/ed0f2df5a3c57f57268e89e4cb4a153b183406c0))\n\n### ✨ New Features\n\n* Add Car Scanner Patch ([32be69b](https://github.com/windwanderer/morphe-patches/commit/32be69b996845b7893ee398cc7cfcf19c28d9dfc))\n* Update build.gradle ([6f438a5](https://github.com/windwanderer/morphe-patches/commit/6f438a51c9b9c7cd4898f64360e2259841688210))\n* Update build.gradle ([73271db](https://github.com/windwanderer/morphe-patches/commit/73271db5c0c39a624ee972a0b1ba1b93e7c0704a))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.0.0-dev.1/patches-1.0.0-dev.1.mpp",
+  "created_at": "2026-09-18T03:55:43",
+  "description": "## 1.0.0 (2026-09-18)\n\n### 🐛 Bug Fixes\n\n* add missing import ([8195d03](https://github.com/windwanderer/morphe-patches/commit/8195d034b7f0c7daa16156ad5f5211256b572607))\n* update patch ([93a8612](https://github.com/windwanderer/morphe-patches/commit/93a861278510dc629fbcc1e0243975d7718f4d58))\n* update patch to new ([ed0f2df](https://github.com/windwanderer/morphe-patches/commit/ed0f2df5a3c57f57268e89e4cb4a153b183406c0))\n\n### ✨ New Features\n\n* Add Car Scanner Patch ([32be69b](https://github.com/windwanderer/morphe-patches/commit/32be69b996845b7893ee398cc7cfcf19c28d9dfc))\n* Update build.gradle ([6f438a5](https://github.com/windwanderer/morphe-patches/commit/6f438a51c9b9c7cd4898f64360e2259841688210))\n* Update build.gradle ([73271db](https://github.com/windwanderer/morphe-patches/commit/73271db5c0c39a624ee972a0b1ba1b93e7c0704a))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.0.0/patches-1.0.0.mpp",
   "signature_download_url": "",
-  "version": "1.0.0-dev.1"
+  "version": "1.0.0"
 }
