@@ -1,3 +1,10 @@
+## [1.0.1-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.0.0...v1.0.1-dev.1) (2026-09-18)
+
+### 🐛 Bug Fixes
+
+* update patch ([b102cd1](https://github.com/windwanderer/morphe-patches/commit/b102cd1b245efaff8daab723b6054d7b3ada45dd))
+* update patch ([fb15fb9](https://github.com/windwanderer/morphe-patches/commit/fb15fb9396ac560251737754b3abac8d9846d884))
+
 ## 1.0.0 (2026-09-18)
 
 ### 🐛 Bug Fixes
