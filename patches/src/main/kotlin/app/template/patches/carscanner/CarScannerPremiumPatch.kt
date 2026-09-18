@@ -1,5 +1,6 @@
 package app.template.patches.carscanner
 
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
 
 val carScannerPremiumPatch = bytecodePatch(
