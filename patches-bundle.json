@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-18T21:48:03",
-  "description": "## [1.2.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.1.0...v1.2.0-dev.1) (2026-09-18)\n\n### ✨ New Features\n\n* add MetService patch ([e572b05](https://github.com/windwanderer/morphe-patches/commit/e572b05386fbfa3aadf5c8bf31ad6ca6b0d10481))\n* add MetService patch ([f99a7ae](https://github.com/windwanderer/morphe-patches/commit/f99a7ae79995c80bca58d85a7c935ffd2e3f51ac))\n* add MetService patch ([2792962](https://github.com/windwanderer/morphe-patches/commit/2792962676b53bb6eb4a4e438e1ab99d30352971))\n* add MetService patch ([6435936](https://github.com/windwanderer/morphe-patches/commit/64359363bfb11b9ce0bf82f29c388a336b0b8847))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.2.0-dev.1/patches-1.2.0-dev.1.mpp",
+  "created_at": "2026-09-18T21:52:06",
+  "description": "## [1.2.0](https://github.com/windwanderer/morphe-patches/compare/v1.1.0...v1.2.0) (2026-09-18)\n\n### ✨ New Features\n\n* add MetService patch ([e572b05](https://github.com/windwanderer/morphe-patches/commit/e572b05386fbfa3aadf5c8bf31ad6ca6b0d10481))\n* add MetService patch ([f99a7ae](https://github.com/windwanderer/morphe-patches/commit/f99a7ae79995c80bca58d85a7c935ffd2e3f51ac))\n* add MetService patch ([2792962](https://github.com/windwanderer/morphe-patches/commit/2792962676b53bb6eb4a4e438e1ab99d30352971))\n* add MetService patch ([6435936](https://github.com/windwanderer/morphe-patches/commit/64359363bfb11b9ce0bf82f29c388a336b0b8847))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.2.0/patches-1.2.0.mpp",
   "signature_download_url": "",
-  "version": "1.2.0-dev.1"
+  "version": "1.2.0"
 }
