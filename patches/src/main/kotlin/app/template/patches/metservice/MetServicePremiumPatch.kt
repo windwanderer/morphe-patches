@@ -1,6 +1,7 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.patch.bytecodePatch
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
 
 val MetServicePremiumPatch = bytecodePatch(
     name = "MetService Premium Unlock",
