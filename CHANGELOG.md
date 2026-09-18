@@ -1,3 +1,9 @@
+## [1.3.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.2.0...v1.3.0-dev.1) (2026-09-18)
+
+### ✨ New Features
+
+* update MetService patch ([3d7f9ed](https://github.com/windwanderer/morphe-patches/commit/3d7f9ed770db97ad1a2a51967502b74d0735f651))
+
 ## [1.2.0](https://github.com/windwanderer/morphe-patches/compare/v1.1.0...v1.2.0) (2026-09-18)
 
 ### ✨ New Features
