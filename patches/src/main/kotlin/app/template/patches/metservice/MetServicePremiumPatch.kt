@@ -1,19 +1,24 @@
-package com.metservice.kryten.patches
+package app.template.patches.billingstatus
 
-import app.revanced.morphe.Patch
-import app.revanced.morphe.patch.bytecodePatch
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstructions
+import app.morphe.patcher.patch.bytecodePatch
 
-class BillingStatusPatch : Patch() {
-    override fun getFingerprints() = listOf(
-        BillingStatusFingerprint
-    )
+@Suppress("unused")
+val billingStatusPatch = bytecodePatch(
+    name = "BillingStatus Premium Unlock",
+    description = "Force BillingStatus.a() to always return true.",
+    default = true
+) {
+    // Match fingerprint
+    dependsOn(BillingStatusFingerprint)
 
-    override fun apply(context: Patch.Context) {
-        bytecodePatch(BillingStatusFingerprint) {
-            replaceInstructions {
-                loadBoolean(true)
-                returnBoolean()
-            }
+    // Patch logic
+    execute {
+        BillingStatusFingerprint.method.replaceInstructions {
+            """
+                const/4 v0, 0x1
+                return v0
+            """
         }
     }
 }
