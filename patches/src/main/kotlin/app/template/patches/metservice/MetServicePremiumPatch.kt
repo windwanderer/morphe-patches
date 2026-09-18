@@ -2,7 +2,6 @@ package app.template.patches.metservice
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
-import app.template.patches.shared.Constants.COMPATIBILITY_MET_SERVICE
 
 @Suppress("unused")
 val metServicePremiumPatch = bytecodePatch(
@@ -10,8 +9,6 @@ val metServicePremiumPatch = bytecodePatch(
     description = "Modify AppState premium state.",
     default = true
 ) {
-    compatibleWith(COMPATIBILITY_MET_SERVICE)
-
     execute {
         AppStateTFingerprint.method.addInstructions(
             0,
