@@ -9,21 +9,9 @@ object SplashControllerZ1Fingerprint : Fingerprint(
     parameters = listOf("Ljava/util/Map;")
 )
 
-object SplashPresenterDelayFingerprint : Fingerprint(
+object SplashPresenterTFingerprint : Fingerprint(
     definingClass = "Lcom/metservice/kryten/ui/splash/SplashPresenter;",
     name = "t",
     returnType = "V",
-    parameters = emptyList(),
-    filters = listOf(
-        app.morphe.patcher.methodCall(
-            definingClass = "Lm92;",
-            name = "o",
-            parameters = listOf(
-                "J",
-                "Ljava/util/concurrent/TimeUnit;",
-                "Ll33;"
-            ),
-            returnType = "Ldc2;"
-        )
-    )
+    parameters = emptyList()
 )
