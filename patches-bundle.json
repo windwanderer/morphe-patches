@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-19T00:26:36",
-  "description": "## [1.5.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.6...v1.5.0-dev.7) (2026-09-19)\n\n### 🐛 Bug Fixes\n\n* update 2s skip ([9eba8f7](https://github.com/windwanderer/morphe-patches/commit/9eba8f78248f24b6c5a03f9f7f636d3f9a6c7d92))\n* update 2s skip ([5542b2b](https://github.com/windwanderer/morphe-patches/commit/5542b2b6cb5a0957fe09e72ce66e9a92e6aafb3b))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.7/patches-1.5.0-dev.7.mpp",
+  "created_at": "2026-09-19T00:42:55",
+  "description": "## [1.5.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.7...v1.5.0-dev.8) (2026-09-19)\n\n### 🐛 Bug Fixes\n\n* update 2s skip ([dd1b1f8](https://github.com/windwanderer/morphe-patches/commit/dd1b1f87cd8a700d6e034baf037d9c4ab9fff8a2))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.8/patches-1.5.0-dev.8.mpp",
   "signature_download_url": "",
-  "version": "1.5.0-dev.7"
+  "version": "1.5.0-dev.8"
 }

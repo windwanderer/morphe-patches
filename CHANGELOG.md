@@ -1,3 +1,9 @@
+## [1.5.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.7...v1.5.0-dev.8) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* update 2s skip ([dd1b1f8](https://github.com/windwanderer/morphe-patches/commit/dd1b1f87cd8a700d6e034baf037d9c4ab9fff8a2))
+
 ## [1.5.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.6...v1.5.0-dev.7) (2026-09-19)
 
 ### 🐛 Bug Fixes
