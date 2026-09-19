@@ -1,3 +1,30 @@
+## [1.5.0](https://github.com/windwanderer/morphe-patches/compare/v1.4.0...v1.5.0) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* skip splash ([7618b18](https://github.com/windwanderer/morphe-patches/commit/7618b187952e23add92d435a07c3ef6381193e25))
+* skip splash ([98bbd36](https://github.com/windwanderer/morphe-patches/commit/98bbd36bec61a86e2edf5db86f28307eda538c29))
+* skip splash ([e93a175](https://github.com/windwanderer/morphe-patches/commit/e93a175c23ae283fbcfc3b48ffd27983d83bf432))
+* skip splash ([e68261a](https://github.com/windwanderer/morphe-patches/commit/e68261a488c361037cc65dec022157cebb7cb28f))
+* update 2s skip ([c0a8c0c](https://github.com/windwanderer/morphe-patches/commit/c0a8c0cd9c7323fdd8ee01b3c5bc8d92c4f5197a))
+* update 2s skip ([dd1b1f8](https://github.com/windwanderer/morphe-patches/commit/dd1b1f87cd8a700d6e034baf037d9c4ab9fff8a2))
+* update 2s skip ([9eba8f7](https://github.com/windwanderer/morphe-patches/commit/9eba8f78248f24b6c5a03f9f7f636d3f9a6c7d92))
+* update 2s skip ([5542b2b](https://github.com/windwanderer/morphe-patches/commit/5542b2b6cb5a0957fe09e72ce66e9a92e6aafb3b))
+
+### ✨ New Features
+
+* patch premium ([becdf78](https://github.com/windwanderer/morphe-patches/commit/becdf78c3d6c472ae2e68806c6d1f3262ef1b0db))
+* patch splash ([c5e5998](https://github.com/windwanderer/morphe-patches/commit/c5e59983c69edb2a34ab99ac40b0bd47445dde5f))
+* remove unnecessary patch for splash ad ([a119ba8](https://github.com/windwanderer/morphe-patches/commit/a119ba80a0578034c40ba6af9969008c0aba7177))
+* Skip MetService Splash ([512cd06](https://github.com/windwanderer/morphe-patches/commit/512cd069060d132a2b25cb82c1dbcc2e27946cd2))
+* update MetService patch ([31fc528](https://github.com/windwanderer/morphe-patches/commit/31fc528484976bfaa2c47aef9a5c64bdddbb9f2b))
+* update MetService patch ([eff9702](https://github.com/windwanderer/morphe-patches/commit/eff9702aaf9091d4f75f2499dafff4d9e13858a8))
+* update MetService patch ([056a2d1](https://github.com/windwanderer/morphe-patches/commit/056a2d1bbb9a5bab5610e0f49ea9962152ad9c35))
+* update MetService patch ([1b40a00](https://github.com/windwanderer/morphe-patches/commit/1b40a000d9dbc55d8c98fc0ed723ce0afd15a393))
+* update MetService patch ([b172f2e](https://github.com/windwanderer/morphe-patches/commit/b172f2e62e0491d1fb8c4dd943614438996a69b3))
+* update MetService patch ([49296dd](https://github.com/windwanderer/morphe-patches/commit/49296dd7d5455f5010eeae59e8bfc3d9d426db89))
+* update MetService patch ([9bde9b7](https://github.com/windwanderer/morphe-patches/commit/9bde9b74552d5781cb17ab8a1179d0c8719ecf9c))
+
 ## [1.5.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.14...v1.5.0-dev.15) (2026-09-19)
 
 ### ✨ New Features
