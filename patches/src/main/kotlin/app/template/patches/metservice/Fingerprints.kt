@@ -1,7 +1,10 @@
-package app.morphe.patches.metservice
+package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
-import app.morphe.patcher.extensions.*
+import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
+import app.morphe.patcher.fieldAccess
+import app.morphe.patcher.methodCall
+import app.morphe.patcher.opcode
 import com.android.tools.smali.dexlib2.Opcode
 
 object SplashControllerZ1Fingerprint : Fingerprint(
@@ -26,11 +29,10 @@ object SplashPresenterConstructorFingerprint : Fingerprint(
         "Lcom/metservice/kryten/util/AnalyticsAdapter;"
     ),
     filters = listOf(
-        fieldAccess(
-            opcode = Opcode.IPUT_OBJECT,
-            definingClass = "Lcom/metservice/kryten/ui/splash/SplashPresenter;",
-            name = "n",
-            type = "Lvq;"
+        methodCall(
+            definingClass = "Ljava/lang/System;",
+            name = "currentTimeMillis",
+            returnType = "J"
         )
     )
 )
