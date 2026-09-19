@@ -1,3 +1,9 @@
+## [1.5.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.12...v1.5.0-dev.13) (2026-09-19)
+
+### ✨ New Features
+
+* patch premium ([becdf78](https://github.com/windwanderer/morphe-patches/commit/becdf78c3d6c472ae2e68806c6d1f3262ef1b0db))
+
 ## [1.5.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.11...v1.5.0-dev.12) (2026-09-19)
 
 ### 🐛 Bug Fixes

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-19T01:53:24",
-  "description": "## [1.5.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.11...v1.5.0-dev.12) (2026-09-19)\n\n### 🐛 Bug Fixes\n\n* skip splash ([7618b18](https://github.com/windwanderer/morphe-patches/commit/7618b187952e23add92d435a07c3ef6381193e25))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.12/patches-1.5.0-dev.12.mpp",
+  "created_at": "2026-09-19T02:26:36",
+  "description": "## [1.5.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.12...v1.5.0-dev.13) (2026-09-19)\n\n### ✨ New Features\n\n* patch premium ([becdf78](https://github.com/windwanderer/morphe-patches/commit/becdf78c3d6c472ae2e68806c6d1f3262ef1b0db))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.5.0-dev.13/patches-1.5.0-dev.13.mpp",
   "signature_download_url": "",
-  "version": "1.5.0-dev.12"
+  "version": "1.5.0-dev.13"
 }
