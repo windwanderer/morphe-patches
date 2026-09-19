@@ -1,11 +1,24 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
-import com.android.tools.smali.dexlib2.AccessFlags
+import app.morphe.patcher.methodCall
 
-object AppStateTFingerprint : Fingerprint(
+object AppStateAdFreeFingerprint : Fingerprint(
     definingClass = "Lcom/metservice/kryten/AppState;",
     name = "t",
     returnType = "Z",
-    accessFlags = listOf(AccessFlags.PUBLIC)
+    parameters = emptyList()
+)
+
+object SplashPresenterTimerFingerprint : Fingerprint(
+    definingClass = "Lcom/metservice/kryten/ui/splash/SplashPresenter;",
+    name = "t",
+    returnType = "V",
+    parameters = emptyList(),
+    filters = listOf(
+        methodCall(
+            definingClass = "Lm92;",
+            name = "o"
+        )
+    )
 )

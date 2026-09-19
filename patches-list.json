@@ -1,10 +1,19 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.4.0",
+  "version": "1.5.0-dev.15",
   "patches": [
     {
-      "name": "MetService Premium Unlock",
-      "description": "Force AppState.t() to always return true.",
+      "name": "MetService Premium",
+      "description": "Enable ad-free state.",
+      "default": false,
+      "category": null,
+      "dependencies": [],
+      "compatiblePackages": null,
+      "options": []
+    },
+    {
+      "name": "MetService Remove Splash Delay",
+      "description": "Remove the 2-second splash delay.",
       "default": false,
       "category": null,
       "dependencies": [],
