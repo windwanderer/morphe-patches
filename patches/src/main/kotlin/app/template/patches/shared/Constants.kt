@@ -6,7 +6,7 @@ import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.SupportedAbi
 
 object Constants {
-    val COMPATIBILITY_EXAMPLE = Compatibility(
+    val COMPATIBILITY_MetService = Compatibility(
         name = "MetService", // App name as it appears in the Android launcher.
         packageName = "com.metservice.kryten",
         apkFileType = ApkFileType.APK, // Preferred or recommended file type.
