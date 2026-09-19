@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-09-19T03:55:03",
-  "description": "## [1.6.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.5.0...v1.6.0-dev.1) (2026-09-19)\n\n### ✨ New Features\n\n* update compatibility ([3309fa1](https://github.com/windwanderer/morphe-patches/commit/3309fa1c3ed751735383361d6964ac4759f5d785))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.6.0-dev.1/patches-1.6.0-dev.1.mpp",
+  "created_at": "2026-09-19T04:05:27",
+  "description": "## [1.6.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.6.0-dev.1...v1.6.0-dev.2) (2026-09-19)\n\n### ✨ New Features\n\n* update compatibility ([6d5bb64](https://github.com/windwanderer/morphe-patches/commit/6d5bb64e636cbc4f16a50a69c6cf23740b12404f))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.6.0-dev.2/patches-1.6.0-dev.2.mpp",
   "signature_download_url": "",
-  "version": "1.6.0-dev.1"
+  "version": "1.6.0-dev.2"
 }
