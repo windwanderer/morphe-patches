@@ -1,3 +1,9 @@
+## [1.5.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.14...v1.5.0-dev.15) (2026-09-19)
+
+### ✨ New Features
+
+* remove unnecessary patch for splash ad ([a119ba8](https://github.com/windwanderer/morphe-patches/commit/a119ba80a0578034c40ba6af9969008c0aba7177))
+
 ## [1.5.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.13...v1.5.0-dev.14) (2026-09-19)
 
 ### ✨ New Features

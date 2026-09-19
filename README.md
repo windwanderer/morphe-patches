@@ -15,16 +15,15 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.5.0-dev.14](https://github.com/windwanderer/morphe-patches/releases/tag/v1.5.0-dev.14)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v1.5.0-dev.15](https://github.com/windwanderer/morphe-patches/releases/tag/v1.5.0-dev.15)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;2 patches total
 <details open>
-<summary>🌐 Universal&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
+<summary>🌐 Universal&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
 | [MetService Premium](#metservice-premium) | Enable ad-free state. |  |
 | [MetService Remove Splash Delay](#metservice-remove-splash-delay) | Remove the 2-second splash delay. |  |
-| [MetService Skip Splash Ad](#metservice-skip-splash-ad) | Skip splash advertisement. |  |
 
 </details>
 
