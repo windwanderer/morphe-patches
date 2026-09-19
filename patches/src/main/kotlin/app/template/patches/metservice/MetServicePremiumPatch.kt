@@ -55,3 +55,19 @@ val splashPatch = bytecodePatch(
         )
     }
 }
+
+@Suppress("unused")
+val premiumPatch = bytecodePatch(
+    name = "MetService Premium",
+    description = "Enable ad-free state."
+) {
+    execute {
+        AppStateAdFreeFingerprint.method.addInstructions(
+            0,
+            """
+                const/4 v0, 0x1
+                return v0
+            """
+        )
+    }
+}
