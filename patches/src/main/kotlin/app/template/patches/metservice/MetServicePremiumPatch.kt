@@ -5,15 +5,11 @@ import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 
 @Suppress("unused")
-val splashPatch = bytecodePatch(
-    name = "MetService Splash",
-    description = "Skip splash advertisement and remove splash delay."
+val splashAdPatch = bytecodePatch(
+    name = "MetService Skip Splash Ad",
+    description = "Skip splash advertisement."
 ) {
     execute {
-
-        // ------------------------------------------------------------
-        // 1. Skip splash advertisement
-        // ------------------------------------------------------------
 
         SplashControllerZ1Fingerprint.method.addInstructions(
             0,
@@ -27,24 +23,15 @@ val splashPatch = bytecodePatch(
                 return-void
             """
         )
+    }
+}
 
-        // ------------------------------------------------------------
-        // 2. Remove the 2-second splash delay
-        //
-        // Original:
-        //
-        // const-wide/16 v7, 0x2
-        // invoke-static {v7, v8, v2, v0}, Lm92;->o(...)
-        //
-        // Change 2 seconds -> 0 seconds.
-        //
-        // There are two m92.o() calls in SplashPresenter.t():
-        //
-        //   first  = 2 seconds
-        //   second = 20 seconds timeout
-        //
-        // instructionMatches.first() targets the first one.
-        // ------------------------------------------------------------
+@Suppress("unused")
+val splashDelayPatch = bytecodePatch(
+    name = "MetService Remove Splash Delay",
+    description = "Remove the 2-second splash delay."
+) {
+    execute {
 
         val timerMatch =
             SplashPresenterTimerFingerprint.instructionMatches.first()
