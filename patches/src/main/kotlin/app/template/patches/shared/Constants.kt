@@ -23,7 +23,7 @@ object Constants {
             // redirect users to these sites. If an app version is not available
             // on ApkMirror or UpToDown, then the user will be sent to Google search.
             AppTarget(
-                version = "null"
+                version = "2.33.0"
             )
         )
     )
