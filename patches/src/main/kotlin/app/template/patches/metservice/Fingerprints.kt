@@ -22,7 +22,7 @@ object SplashPresenterDelayFingerprint : Fingerprint(
         methodCall(
             definingClass = "Lm92;",
             name = "o",
-            instructionLocation = MatchAfterImmediately()
+            location = MatchAfterImmediately()
         )
     )
 )
