@@ -9,10 +9,12 @@ val splashPatch = bytecodePatch(
     name = "MetService Splash",
     description = "Skip splash advertisement and remove splash delay."
 ) {
-
     execute {
 
-        // Skip splash advertisement.
+        // ------------------------------------------------------------
+        // 1. Skip splash advertisement
+        // ------------------------------------------------------------
+
         SplashControllerZ1Fingerprint.method.addInstructions(
             0,
             """
@@ -26,25 +28,30 @@ val splashPatch = bytecodePatch(
             """
         )
 
-        // Make SplashPresenter.n initially TRUE.
+        // ------------------------------------------------------------
+        // 2. Remove the 2-second splash delay
         //
         // Original:
         //
-        // sget-object p1, Ljava/lang/Boolean;->FALSE:Ljava/lang/Boolean;
-        // invoke-static {p1}, Lvq;->q(Ljava/lang/Object;)Lvq;
-        // move-result-object p1
-        // iput-object p1, p0, ...->n:Lvq;
+        // const-wide/16 v7, 0x2
+        // invoke-static {v7, v8, v2, v0}, Lm92;->o(...)
         //
-        // invoke-static {}, Ljava/lang/System;->currentTimeMillis()J
+        // Change 2 seconds -> 0 seconds.
         //
-        // currentTimeMillis() is 5 instructions after FALSE.
+        // There are two m92.o() calls in SplashPresenter.t():
+        //
+        //   first  = 2 seconds
+        //   second = 20 seconds timeout
+        //
+        // instructionMatches.first() targets the first one.
+        // ------------------------------------------------------------
 
-        val match =
-            SplashPresenterConstructorFingerprint.instructionMatches.first()
+        val timerMatch =
+            SplashPresenterTimerFingerprint.instructionMatches.first()
 
-        SplashPresenterConstructorFingerprint.method.replaceInstruction(
-            match.index - 5,
-            "sget-object p1, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;"
+        SplashPresenterTimerFingerprint.method.replaceInstruction(
+            timerMatch.index - 1,
+            "const-wide/16 v7, 0x0"
         )
     }
 }
