@@ -12,7 +12,7 @@ val metServiceSplashSkipPatch = bytecodePatch(
 ) {
     execute {
 
-        // Skip Splash advertisement loading.
+        // Skip splash advertisement
         SplashControllerZ1Fingerprint.method.addInstructions(
             0,
             """
@@ -26,12 +26,14 @@ val metServiceSplashSkipPatch = bytecodePatch(
             """
         )
 
-        // Remove the two-second delay.
+        // Remove the 2-second delay
         SplashPresenterDelayFingerprint.let {
             val match = it.instructionMatches[0]
 
+            // The matched instruction is the Lm92->o() call.
+            // The const-wide/16 0x2 is immediately before it.
             it.method.replaceInstruction(
-                match.index,
+                match.index - 1,
                 "const-wide/16 v7, 0x0"
             )
         }

@@ -2,7 +2,6 @@ package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
-import app.morphe.patcher.literal
 import app.morphe.patcher.methodCall
 
 object SplashControllerZ1Fingerprint : Fingerprint(
@@ -18,10 +17,21 @@ object SplashPresenterDelayFingerprint : Fingerprint(
     returnType = "V",
     parameters = emptyList(),
     filters = listOf(
-        literal(2L),
         methodCall(
             definingClass = "Lm92;",
             name = "o",
+            parameters = listOf(
+                "J",
+                "Ljava/util/concurrent/TimeUnit;",
+                "Ll33;"
+            ),
+            returnType = "Ldc2;"
+        ),
+        methodCall(
+            definingClass = "Lm92;",
+            name = "i",
+            parameters = listOf("Ll33;"),
+            returnType = "Lxa2;",
             location = MatchAfterImmediately()
         )
     )
