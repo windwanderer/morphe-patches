@@ -1,7 +1,9 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
+import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
 import app.morphe.patcher.literal
+import app.morphe.patcher.methodCall
 
 object SplashControllerZ1Fingerprint : Fingerprint(
     definingClass = "Lcom/metservice/kryten/ui/splash/SplashController;",
@@ -16,6 +18,11 @@ object SplashPresenterDelayFingerprint : Fingerprint(
     returnType = "V",
     parameters = emptyList(),
     filters = listOf(
-        literal(2L)
+        literal(2L),
+        methodCall(
+            definingClass = "Lm92;",
+            name = "o",
+            instructionLocation = MatchAfterImmediately()
+        )
     )
 )
