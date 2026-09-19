@@ -6,7 +6,7 @@ import app.morphe.patcher.patch.Compatibility
 import app.morphe.patcher.patch.SupportedAbi
 
 object Constants {
-    val COMPATIBILITY_EXAMPLE = Compatibility(
+    val COMPATIBILITY_MetService = Compatibility(
         name = "MetService", // App name as it appears in the Android launcher.
         packageName = "com.metservice.kryten",
         apkFileType = ApkFileType.APK, // Preferred or recommended file type.
@@ -23,7 +23,7 @@ object Constants {
             // redirect users to these sites. If an app version is not available
             // on ApkMirror or UpToDown, then the user will be sent to Google search.
             AppTarget(
-                version = "2.33.0"
+                version = "null"
             )
         )
     )
