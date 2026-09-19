@@ -1,3 +1,9 @@
+## [1.6.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.5.0...v1.6.0-dev.1) (2026-09-19)
+
+### ✨ New Features
+
+* update compatibility ([3309fa1](https://github.com/windwanderer/morphe-patches/commit/3309fa1c3ed751735383361d6964ac4759f5d785))
+
 ## [1.5.0](https://github.com/windwanderer/morphe-patches/compare/v1.4.0...v1.5.0) (2026-09-19)
 
 ### 🐛 Bug Fixes
