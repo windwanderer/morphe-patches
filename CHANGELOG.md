@@ -1,3 +1,9 @@
+## [1.5.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.9...v1.5.0-dev.10) (2026-09-19)
+
+### 🐛 Bug Fixes
+
+* skip splash ([e68261a](https://github.com/windwanderer/morphe-patches/commit/e68261a488c361037cc65dec022157cebb7cb28f))
+
 ## [1.5.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.8...v1.5.0-dev.9) (2026-09-19)
 
 ### 🐛 Bug Fixes
