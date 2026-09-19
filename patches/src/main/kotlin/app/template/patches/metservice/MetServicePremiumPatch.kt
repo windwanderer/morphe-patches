@@ -1,15 +1,18 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 
 @Suppress("unused")
 val metServiceSplashSkipPatch = bytecodePatch(
-    name = "Skip MetService Splash Ad",
-    description = "Skip the splash advertisement and continue to the next screen.",
+    name = "Skip MetService Splash",
+    description = "Skips the splash advertisement and removes the two second splash delay.",
     default = true
 ) {
     execute {
+
+        // Skip Splash advertisement loading.
         SplashControllerZ1Fingerprint.method.addInstructions(
             0,
             """
@@ -22,5 +25,15 @@ val metServiceSplashSkipPatch = bytecodePatch(
                 return-void
             """
         )
+
+        // Remove the two-second delay.
+        SplashPresenterDelayFingerprint.let {
+            val match = it.instructionMatches[0]
+
+            it.method.replaceInstruction(
+                match.index,
+                "const-wide/16 v7, 0x0"
+            )
+        }
     }
 }
