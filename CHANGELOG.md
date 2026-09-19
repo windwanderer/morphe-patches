@@ -1,3 +1,9 @@
+## [1.5.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.5...v1.5.0-dev.6) (2026-09-19)
+
+### ✨ New Features
+
+* Skip MetService Splash ([512cd06](https://github.com/windwanderer/morphe-patches/commit/512cd069060d132a2b25cb82c1dbcc2e27946cd2))
+
 ## [1.5.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.4...v1.5.0-dev.5) (2026-09-18)
 
 ### ✨ New Features

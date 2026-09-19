@@ -1,10 +1,10 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.5.0-dev.5",
+  "version": "1.5.0-dev.6",
   "patches": [
     {
-      "name": "Skip MetService Splash Ad",
-      "description": "Skip the splash advertisement and continue to the next screen.",
+      "name": "Skip MetService Splash",
+      "description": "Skips the splash advertisement and removes the two second splash delay.",
       "default": false,
       "category": null,
       "dependencies": [],
