@@ -26,12 +26,11 @@ val metServiceSplashSkipPatch = bytecodePatch(
             """
         )
 
-        // Remove the 2-second delay
+        // The first Lm92->o() call is the 2-second timer.
+        // The second one is the 20-second timeout.
         SplashPresenterDelayFingerprint.let {
             val match = it.instructionMatches[0]
 
-            // The matched instruction is the Lm92->o() call.
-            // The const-wide/16 0x2 is immediately before it.
             it.method.replaceInstruction(
                 match.index - 1,
                 "const-wide/16 v7, 0x0"
