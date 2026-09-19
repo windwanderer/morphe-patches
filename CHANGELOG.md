@@ -1,3 +1,9 @@
+## [1.5.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.13...v1.5.0-dev.14) (2026-09-19)
+
+### ✨ New Features
+
+* patch splash ([c5e5998](https://github.com/windwanderer/morphe-patches/commit/c5e59983c69edb2a34ab99ac40b0bd47445dde5f))
+
 ## [1.5.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.5.0-dev.12...v1.5.0-dev.13) (2026-09-19)
 
 ### ✨ New Features

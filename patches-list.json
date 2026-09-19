@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.5.0-dev.13",
+  "version": "1.5.0-dev.14",
   "patches": [
     {
       "name": "MetService Premium",
@@ -12,8 +12,17 @@
       "options": []
     },
     {
-      "name": "MetService Splash",
-      "description": "Skip splash advertisement and remove splash delay.",
+      "name": "MetService Remove Splash Delay",
+      "description": "Remove the 2-second splash delay.",
+      "default": false,
+      "category": null,
+      "dependencies": [],
+      "compatiblePackages": null,
+      "options": []
+    },
+    {
+      "name": "MetService Skip Splash Ad",
+      "description": "Skip splash advertisement.",
       "default": false,
       "category": null,
       "dependencies": [],
