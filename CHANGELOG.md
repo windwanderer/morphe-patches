@@ -1,3 +1,9 @@
+## [1.7.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.5...v1.7.0-dev.6) (2026-09-26)
+
+### ✨ New Features
+
+* change AppTarget for metservice ([7a73f75](https://github.com/windwanderer/morphe-patches/commit/7a73f75e93d79120bd8ae3a5874733d5a71360e3))
+
 ## [1.7.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.4...v1.7.0-dev.5) (2026-09-26)
 
 ### ✨ New Features
