@@ -25,7 +25,7 @@ import com.android.tools.smali.dexlib2.AccessFlags
  *     pj.n() → always return true
  */
 object AppStateAdFreeFingerprint : Fingerprint(
-    definingClass = ":defpackage/pj",
+    definingClass = ":",
     name = "n",
     returnType = "Z",
     accessFlags = listOf(AccessFlags.PUBLIC),
@@ -53,12 +53,13 @@ object AppStateAdFreeFingerprint : Fingerprint(
  */
 
 object SplashPresenterTimerFingerprint : Fingerprint(
-    definingClass = ":defpackage/yt4",
+    definingClass = ":",
     name = "o",
     returnType = "V",
+    accessFlags = listOf(AccessFlags.PUBLIC),
     filters = listOf(
         methodCall(
-            definingClass = ":defpackage/dc3",
+            definingClass = ":",
             name = "p"
         )
     )
