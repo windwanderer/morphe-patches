@@ -2,6 +2,8 @@ package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
 import app.morphe.patcher.methodCall
+import app.morphe.patcher.string
+import com.android.tools.smali.dexlib2.AccessFlags
 
 /**
  * PREMIUM LOGIC
@@ -26,7 +28,10 @@ object AppStateAdFreeFingerprint : Fingerprint(
     definingClass = ":defpackage/pj",
     name = "n",
     returnType = "Z",
-    parameters = emptyList()
+    accessFlags = listOf(AccessFlags.PUBLIC),
+    filters = listOf(
+        string("premium_ad_free_enabled")
+    )
 )
 
 /**
