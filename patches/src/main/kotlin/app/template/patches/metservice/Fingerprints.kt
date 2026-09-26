@@ -26,9 +26,7 @@ object AppStateAdFreeFingerprint : Fingerprint(
     definingClass = ":defpackage/pj",
     name = "n",
     returnType = "Z",
-    filters = listOf(
-        string("premium_ad_free_enabled")
-    )
+    parameters = emptyList()
 )
 
 /**
@@ -53,8 +51,6 @@ object SplashPresenterTimerFingerprint : Fingerprint(
     definingClass = ":defpackage/yt4",
     name = "o",
     returnType = "V",
-    accessFlags = listOf(AccessFlags.PUBLIC),
-
     filters = listOf(
         methodCall(
             definingClass = ":defpackage/dc3",
