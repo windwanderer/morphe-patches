@@ -11,7 +11,7 @@ val premiumPatch = bytecodePatch(
 ) {
     compatibleWith(COMPATIBILITY_MetService)
     execute {
-        AppStateAdFreeFingerprint.method.replaceInstructions(
+        AppStateAdFreeFingerprint.method.replaceInstruction(
             0,
             """
                 const/4 v0, 0x1
