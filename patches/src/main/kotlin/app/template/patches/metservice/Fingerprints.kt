@@ -1,65 +1,51 @@
 package app.template.patches.metservice
 
 import app.morphe.patcher.Fingerprint
+import app.morphe.patcher.InstructionLocation.MatchAfterImmediately
 import app.morphe.patcher.methodCall
+import app.morphe.patcher.opcode
 import app.morphe.patcher.string
 import com.android.tools.smali.dexlib2.AccessFlags
+import com.android.tools.smali.dexlib2.Opcode
 
 /**
- * PREMIUM LOGIC
+ * Premium check: `pj.n()Z` → always return true.
  *
- * Premium check moved from old AppState.t() → new pj.n()
+ * Search: getBoolean("premium_ad_free_enabled", true)
  *
- * New logic:
- *     return i().b && h().getBoolean("premium_ad_free_enabled", true);
- *
- * Search keyword to locate this method in future APK updates:
- *     getBoolean("premium_ad_free_enabled", true)
- *
- * Why this works:
- * - All premium checks reference "premium_ad_free_enabled"
- * - This string is stable across versions
- * - pj.n() is the only method combining subscription + ad-free flags
- *
- * Patch target:
- *     pj.n() → always return true
+ * definingClass/name are obfuscated (pj/n), kept only to pin the current
+ * target so a rename fails loudly instead of patching another method.
  */
 object AppStateAdFreeFingerprint : Fingerprint(
-    definingClass = ":",
+    definingClass = "Lpj;",
     name = "n",
     returnType = "Z",
-    accessFlags = listOf(AccessFlags.PUBLIC),
+    parameters = emptyList(),
+    accessFlags = listOf(AccessFlags.PUBLIC, AccessFlags.FINAL),
     filters = listOf(
-        string("premium_ad_free_enabled")
+        string("premium_ad_free_enabled"),
+        methodCall(smali = "Landroid/content/SharedPreferences;->getBoolean(Ljava/lang/String;Z)Z"),
+        opcode(Opcode.MOVE_RESULT, MatchAfterImmediately()),
+        opcode(Opcode.IF_EQZ, MatchAfterImmediately())
     )
 )
 
 /**
- * NEW SPLASH LOGIC (MetService latest APK)
+ * Splash delay: `yt4.o()V`, `dc3.p(2L, timeUnit, fc0Var)`.
  *
- * Splash delay moved from old SplashActivity → new defpackage.yt4.o()
+ * Search: 2L, timeUnit
  *
- * New delay code:
- *     od3 od3VarJ = dc3.p(2L, timeUnit, fc0Var).j(zb.a());
- *
- * Meaning:
- *     dc3.p(2L, ...) = 2-second delay before continuing
- *
- * Search keyword to locate this method in future APK updates:
- *     2L, timeUnit
- *
- * Patch target:
- *     yt4.o() → return immediately (skip splash delay)
+ * Patch reads instructionMatches.first().index - 1 (the const-wide before the
+ * call), so methodCall(Ldc3;->p) must stay the first filter.
  */
-
 object SplashPresenterTimerFingerprint : Fingerprint(
-    definingClass = ":",
+    definingClass = "Lyt4;",
     name = "o",
     returnType = "V",
-    accessFlags = listOf(AccessFlags.PUBLIC),
+    parameters = emptyList(),
     filters = listOf(
         methodCall(
-            definingClass = ":",
+            definingClass = "Ldc3;",
             name = "p"
         )
     )

@@ -1,5 +1,6 @@
 package app.template.patches.metservice
 
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_MetService
@@ -11,7 +12,7 @@ val premiumPatch = bytecodePatch(
 ) {
     compatibleWith(COMPATIBILITY_MetService)
     execute {
-        AppStateAdFreeFingerprint.method.replaceInstruction(
+        AppStateAdFreeFingerprint.method.addInstructions(
             0,
             """
                 const/4 v0, 0x1
@@ -34,7 +35,7 @@ val splashDelayPatch = bytecodePatch(
 
         SplashPresenterTimerFingerprint.method.replaceInstruction(
             timerMatch.index - 1,
-            "const-wide/16 v7, 0x0"
+            "const-wide/16 v8, 0x0"
         )
     }
 }
