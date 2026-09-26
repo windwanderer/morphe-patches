@@ -1,3 +1,42 @@
+## [1.7.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.5...v1.7.0-dev.6) (2026-09-26)
+
+### ✨ New Features
+
+* change AppTarget for metservice ([7a73f75](https://github.com/windwanderer/morphe-patches/commit/7a73f75e93d79120bd8ae3a5874733d5a71360e3))
+
+## [1.7.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.4...v1.7.0-dev.5) (2026-09-26)
+
+### ✨ New Features
+
+* try a more pattern based patch ([faaf31a](https://github.com/windwanderer/morphe-patches/commit/faaf31a65b2594409d2325958e979feeaca089f5))
+* try a more pattern based patch ([14c2d5a](https://github.com/windwanderer/morphe-patches/commit/14c2d5a53a39b6e1b1ef5209cd8e7b7aebec8f40))
+
+## [1.7.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.3...v1.7.0-dev.4) (2026-09-26)
+
+### ✨ New Features
+
+* update patch for metservice v2.34.1 ([67afb0b](https://github.com/windwanderer/morphe-patches/commit/67afb0b39a0994dfa24c180d85a9f16f1e1f85fa))
+
+## [1.7.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.2...v1.7.0-dev.3) (2026-09-26)
+
+### ✨ New Features
+
+* update patch for metservice v2.34.1 ([14219e8](https://github.com/windwanderer/morphe-patches/commit/14219e8bc5a3e4095af9b2827d23be4e81e10b6d))
+
+## [1.7.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.1...v1.7.0-dev.2) (2026-09-26)
+
+### ✨ New Features
+
+* update patch for metservice v2.34.1 ([7e2a25a](https://github.com/windwanderer/morphe-patches/commit/7e2a25a01c644528ed56e18a93130eaec5ede382))
+
+## [1.7.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.6.0...v1.7.0-dev.1) (2026-09-26)
+
+### ✨ New Features
+
+* update patch for metservice v2.34.1 ([affdf0e](https://github.com/windwanderer/morphe-patches/commit/affdf0ef500880d291abab03159ff2427e19f838))
+* update patch for metservice v2.34.1 ([3afed55](https://github.com/windwanderer/morphe-patches/commit/3afed5586975ba7a077596c2e86cd16f49081406))
+* update patch for metservice v2.34.1 ([53d7cfe](https://github.com/windwanderer/morphe-patches/commit/53d7cfee6c2750e1f68bffd859e28d7f78dade62))
+
 ## [1.6.0](https://github.com/windwanderer/morphe-patches/compare/v1.5.0...v1.6.0) (2026-09-19)
 
 ### ✨ New Features

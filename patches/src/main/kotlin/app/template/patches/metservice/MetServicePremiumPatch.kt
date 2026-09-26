@@ -4,6 +4,7 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_MetService
+import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
 @Suppress("unused")
 val premiumPatch = bytecodePatch(
@@ -29,13 +30,12 @@ val splashDelayPatch = bytecodePatch(
 ) {
     compatibleWith(COMPATIBILITY_MetService)
     execute {
-
-        val timerMatch =
-            SplashPresenterTimerFingerprint.instructionMatches.first()
+        val constMatch = SplashPresenterTimerFingerprint.instructionMatches[0]
+        val delayRegister = constMatch.getInstruction<OneRegisterInstruction>().registerA
 
         SplashPresenterTimerFingerprint.method.replaceInstruction(
-            timerMatch.index - 1,
-            "const-wide/16 v7, 0x0"
+            constMatch.index,
+            "const-wide/16 v$delayRegister, 0x0"
         )
     }
 }
