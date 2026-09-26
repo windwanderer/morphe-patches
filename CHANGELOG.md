@@ -1,3 +1,10 @@
+## [1.7.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.4...v1.7.0-dev.5) (2026-09-26)
+
+### ✨ New Features
+
+* try a more pattern based patch ([faaf31a](https://github.com/windwanderer/morphe-patches/commit/faaf31a65b2594409d2325958e979feeaca089f5))
+* try a more pattern based patch ([14c2d5a](https://github.com/windwanderer/morphe-patches/commit/14c2d5a53a39b6e1b1ef5209cd8e7b7aebec8f40))
+
 ## [1.7.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.3...v1.7.0-dev.4) (2026-09-26)
 
 ### ✨ New Features
