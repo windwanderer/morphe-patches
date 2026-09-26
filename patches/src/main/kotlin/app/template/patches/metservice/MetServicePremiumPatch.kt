@@ -1,6 +1,5 @@
 package app.template.patches.metservice
 
-import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_MetService
@@ -12,7 +11,7 @@ val premiumPatch = bytecodePatch(
 ) {
     compatibleWith(COMPATIBILITY_MetService)
     execute {
-        AppStateAdFreeFingerprint.method.addInstructions(
+        AppStateAdFreeFingerprint.method.replaceInstructions(
             0,
             """
                 const/4 v0, 0x1
