@@ -1,3 +1,9 @@
+## [1.7.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.3...v1.7.0-dev.4) (2026-09-26)
+
+### ✨ New Features
+
+* update patch for metservice v2.34.1 ([67afb0b](https://github.com/windwanderer/morphe-patches/commit/67afb0b39a0994dfa24c180d85a9f16f1e1f85fa))
+
 ## [1.7.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.7.0-dev.2...v1.7.0-dev.3) (2026-09-26)
 
 ### ✨ New Features
