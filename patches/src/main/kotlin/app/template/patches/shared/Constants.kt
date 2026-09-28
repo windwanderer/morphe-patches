@@ -15,13 +15,13 @@ object Constants {
             // "version = null" means the patch works with the latest app target
             // and is expected to work with all future app targets.
             //
-            // It is highly recommended to always include the exact app version developed
-            // your patches for or the last version you have confirmed as 100% working.
+            // It is highly recommended to always include the exact app version you used to develop
+            // your patches so users have a version 100% confirmed as working.
             //
             // It is highly preferred to use app versions that are
             // available on apkmirror.com or uptodown.com, as Morphe web-search will
             // redirect users to these sites. If an app version is not available
-            // on ApkMirror or UpToDown, then the user will be sent to Google search.
+            // on ApkMirror or UpToDown, then the user is sent to Google search.
             AppTarget(
                 version = null
             ), 
