@@ -21,15 +21,15 @@ object Constants {
             // It is highly preferred to use app versions that are
             // available on apkmirror.com or uptodown.com, as Morphe web-search will
             // redirect users to these sites. If an app version is not available
-            // on ApkMirror or UpToDown, then the user is sent to Google search.
-            AppTarget(
-                version = null
-            ), 
+            // on ApkMirror or UpToDown, then the user is sent to Google search. 
             AppTarget(
                 version = "2.35.0"
             ), 
             AppTarget(
                 version = "2.34.1"
+            ), 
+            AppTarget(
+                version = "2.33.0"
             )
         )
     )
