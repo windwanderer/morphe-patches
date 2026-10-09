@@ -1,13 +1,12 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.8.0-dev.1",
+  "version": "1.8.0-dev.2",
   "patches": [
     {
       "name": "MetService Premium",
       "description": "Enable ad-free state.",
       "default": true,
       "category": null,
-      "dependencies": [],
       "compatiblePackages": [
         {
           "packageName": "com.metservice.kryten",
@@ -18,13 +17,6 @@
           "signatures": null,
           "targets": [
             {
-              "version": null,
-              "versionCodes": null,
-              "isExperimental": false,
-              "minSdk": null,
-              "description": null
-            },
-            {
               "version": "2.35.0",
               "versionCodes": null,
               "isExperimental": false,
@@ -33,6 +25,13 @@
             },
             {
               "version": "2.34.1",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "2.33.0",
               "versionCodes": null,
               "isExperimental": false,
               "minSdk": null,
@@ -48,7 +47,6 @@
       "description": "Remove the 2-second splash delay.",
       "default": true,
       "category": null,
-      "dependencies": [],
       "compatiblePackages": [
         {
           "packageName": "com.metservice.kryten",
@@ -59,13 +57,6 @@
           "signatures": null,
           "targets": [
             {
-              "version": null,
-              "versionCodes": null,
-              "isExperimental": false,
-              "minSdk": null,
-              "description": null
-            },
-            {
               "version": "2.35.0",
               "versionCodes": null,
               "isExperimental": false,
@@ -74,6 +65,13 @@
             },
             {
               "version": "2.34.1",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "2.33.0",
               "versionCodes": null,
               "isExperimental": false,
               "minSdk": null,
