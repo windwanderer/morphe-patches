@@ -1,3 +1,10 @@
+## [1.8.0](https://github.com/windwanderer/morphe-patches/compare/v1.7.0...v1.8.0) (2026-10-10)
+
+### ✨ New Features
+
+* remove unused version ([2928c73](https://github.com/windwanderer/morphe-patches/commit/2928c7399a6b24b4597c5100fab70f708b67717e))
+* update metservice support ([f0c0152](https://github.com/windwanderer/morphe-patches/commit/f0c01525d84d6ca1c612252c066fc7f7b3a0b143))
+
 ## [1.8.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.8.0-dev.1...v1.8.0-dev.2) (2026-10-09)
 
 ### ✨ New Features
