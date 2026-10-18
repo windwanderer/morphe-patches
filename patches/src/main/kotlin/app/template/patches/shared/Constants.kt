@@ -38,7 +38,7 @@ object Constants {
         name = "Stellarium", // App name as it appears in the Android launcher.
         packageName = "com.noctuasoftware.stellarium_free",
         apkFileType = ApkFileType.APK, // Preferred or recommended file type.
-        appIconColor = 0xFF0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
+        appIconColor = 0x0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
             // Versions confirmed working with the patch.
             AppTarget(
