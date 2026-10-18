@@ -7,6 +7,7 @@ import app.morphe.patcher.methodCall
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
+import com.android.tools.smali.dexlib2.iface.reference.TypeReference
 
 /**
  * License check → always report "license OK" to the native engine.
@@ -16,10 +17,17 @@ import com.android.tools.smali.dexlib2.iface.reference.StringReference
  *
  * The license SDK itself (com.a.a.a.a.*, an obfuscated copy of Google's Play
  * licensing library) is fully obfuscated and changes every release, so the
- * method is located by the signature and its stable log message instead of by name.
+ * method is located by structure instead of obfuscated names. All must hold:
+ *
+ * - declaring class is com.noctuasoftware.stellarium_free.Stellarium
+ *   (the class name is pinned by the JNI callback cbLicenceStatusChanged),
+ * - signature (J)V — the license request id,
+ * - the method logs a message containing "check licen" (case-insensitive),
+ * - the method instantiates the anonymous license callback class Stellarium$1/2/...
+ *   (guards against other (J)V methods that merely contain a similar log message).
  *
  * Original body:
- *   public static void startCheckLicence(long requestId) {
+ *   public void startCheckLicence(long requestId) {
  *       Log.i("Stellarium", "Check license");
  *       b.f.a(new d() {
  *           public final void a(int reason) { Stellarium.cbLicenceStatusChanged(requestId, 1, reason); } // OK
@@ -29,24 +37,33 @@ import com.android.tools.smali.dexlib2.iface.reference.StringReference
  *   }
  *
  * Notes:
- * - accessFlags is intentionally not declared: the patcher matches access flags exactly,
- *   so declaring a subset such as STATIC never matches a public static method.
- *   The patch itself verifies that the matched method is static.
- * - No filters or strings are declared either, so matching uses the deterministic
- *   full class scan instead of the indexed candidate search.
+ * - accessFlags is intentionally not declared: the patcher matches access flags
+ *   exactly, so declaring a subset such as STATIC never matches a public static
+ *   method. The patch works for static and instance methods alike, because the only
+ *   parameter (long) always occupies the last two registers of the method.
  */
 object StartCheckLicenceFingerprint : Fingerprint(
+    definingClass = "Lcom/noctuasoftware/stellarium_free/Stellarium;",
     returnType = "V",
     parameters = listOf("J"),
     custom = { method, _ ->
-        method.implementation?.instructions?.any { instruction ->
-            val opcode = instruction.opcode
-            (opcode == Opcode.CONST_STRING || opcode == Opcode.CONST_STRING_JUMBO) &&
-                (instruction as? ReferenceInstruction)
-                    ?.reference
-                    ?.let { it as? StringReference }
-                    ?.string
-                    ?.contains("check licen", ignoreCase = true) == true
+        method.implementation?.instructions?.let { instructions ->
+            var hasLogMessage = false
+            var hasCallbackClass = false
+            instructions.forEach { instruction ->
+                when (val reference = (instruction as? ReferenceInstruction)?.reference) {
+                    is StringReference ->
+                        if (reference.string.contains("check licen", ignoreCase = true)) {
+                            hasLogMessage = true
+                        }
+
+                    is TypeReference ->
+                        if (reference.type.startsWith("Lcom/noctuasoftware/stellarium_free/Stellarium\$")) {
+                            hasCallbackClass = true
+                        }
+                }
+            }
+            hasLogMessage && hasCallbackClass
         } == true
     }
 )

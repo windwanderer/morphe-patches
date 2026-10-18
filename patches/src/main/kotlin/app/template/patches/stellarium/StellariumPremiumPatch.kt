@@ -4,7 +4,6 @@ import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.extensions.InstructionExtensions.replaceInstruction
 import app.morphe.patcher.patch.bytecodePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_Stellarium
-import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 
 @Suppress("unused")
@@ -24,19 +23,14 @@ val premiumPatch = bytecodePatch(
 
         // Primary target: report "license OK" right away and skip the obfuscated license SDK.
         startCheckLicence?.let { method ->
-            // The fingerprint does not declare access flags (the patcher matches them exactly),
-            // so verify here, because the register calculation below assumes a static method.
-            check(AccessFlags.STATIC.isSet(method.accessFlags)) {
-                "startCheckLicence is not static (access flags: 0x${method.accessFlags.toString(16)})"
-            }
-
             val registerCount = method.implementation!!.registerCount
 
-            // startCheckLicence is static with a single long parameter, so the two
-            // parameter registers are the last two registers of the method.
+            // The license request id is the only parameter, so its two registers are the
+            // last two registers of the method. This holds for static methods as well as
+            // for instance methods (the receiver only sits before the long parameter).
             val parameterStart = registerCount - 2
             check(parameterStart >= 2) {
-                "startCheckLicence only has $registerCount registers, cannot patch"
+                "${method.definingClass}->${method.name} only has $registerCount registers, cannot patch"
             }
 
             // Skip the obfuscated license SDK entirely and tell the native engine
