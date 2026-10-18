@@ -33,4 +33,23 @@ object Constants {
             )
         )
     )
+
+    val COMPATIBILITY_Stellarium = Compatibility(
+        name = "Stellarium", // App name as it appears in the Android launcher.
+        packageName = "com.noctuasoftware.stellarium_free",
+        apkFileType = ApkFileType.APK, // Preferred or recommended file type.
+        appIconColor = 0xFF0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
+        targets = listOf(
+            // Versions confirmed working with the patch.
+            AppTarget(
+                version = "1.16.8"
+            ),
+            AppTarget(
+                version = "1.16.7"
+            ),
+            AppTarget(
+                version = "1.16.6"
+            )
+        )
+    )
 }
