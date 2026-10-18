@@ -1,3 +1,9 @@
+## [1.9.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.1...v1.9.0-dev.2) (2026-10-18)
+
+### ✨ New Features
+
+*  Stellarium patch ([d31d08e](https://github.com/windwanderer/morphe-patches/commit/d31d08e12b9a49d140070a4177f6b46c5527142e))
+
 ## [1.9.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.8.0...v1.9.0-dev.1) (2026-10-18)
 
 ### 🐛 Bug Fixes
