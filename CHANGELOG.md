@@ -1,3 +1,9 @@
+## [1.9.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.3...v1.9.0-dev.4) (2026-10-18)
+
+### ✨ New Features
+
+* update Stellarium patch ([caf3798](https://github.com/windwanderer/morphe-patches/commit/caf3798a26f891cd0c94640d8b900d91981248fb))
+
 ## [1.9.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.2...v1.9.0-dev.3) (2026-10-18)
 
 ### ✨ New Features
