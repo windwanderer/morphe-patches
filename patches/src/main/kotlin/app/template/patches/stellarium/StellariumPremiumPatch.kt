@@ -3,6 +3,7 @@ package app.template.patches.stellarium
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
 import app.morphe.patcher.patch.bytecodePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_Stellarium
+import com.android.tools.smali.dexlib2.AccessFlags
 
 @Suppress("unused")
 val premiumPatch = bytecodePatch(
@@ -12,6 +13,13 @@ val premiumPatch = bytecodePatch(
     compatibleWith(COMPATIBILITY_Stellarium)
     execute {
         val method = StartCheckLicenceFingerprint.method
+
+        // The fingerprint does not declare access flags (the patcher matches them exactly),
+        // so verify here, because the register calculation below assumes a static method.
+        check(AccessFlags.STATIC.isSet(method.accessFlags)) {
+            "startCheckLicence is not static (access flags: 0x${method.accessFlags.toString(16)})"
+        }
+
         val registerCount = method.implementation!!.registerCount
 
         // startCheckLicence is static with a single long parameter, so the two

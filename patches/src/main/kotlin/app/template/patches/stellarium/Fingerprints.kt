@@ -1,8 +1,6 @@
 package app.template.patches.stellarium
 
 import app.morphe.patcher.Fingerprint
-import app.morphe.patcher.methodCall
-import com.android.tools.smali.dexlib2.AccessFlags
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.StringReference
@@ -10,12 +8,12 @@ import com.android.tools.smali.dexlib2.iface.reference.StringReference
 /**
  * License check → always report "license OK" to the native engine.
  *
- * Search: Log.i("Stellarium", "Check license") ("Check License" in some releases,
- * so the string is compared case-insensitively).
+ * Search: Log.i("Stellarium", "Check license")
+ * ("Check License" in some releases, so the message is compared case-insensitively.)
  *
  * The license SDK itself (com.a.a.a.a.*, an obfuscated copy of Google's Play
  * licensing library) is fully obfuscated and changes every release, so the
- * method is located by its stable log message instead.
+ * method is located by the signature and its stable log message instead of by name.
  *
  * Original body:
  *   public static void startCheckLicence(long requestId) {
@@ -27,17 +25,16 @@ import com.android.tools.smali.dexlib2.iface.reference.StringReference
  *       });
  *   }
  *
- * No definingClass/name (the main activity is stable, but the enclosing method
- * has changed before): located by the unique log message plus the
- * Log.i(String, String) call structure.
+ * Notes:
+ * - accessFlags is intentionally not declared: the patcher matches access flags exactly,
+ *   so declaring a subset such as STATIC would never match a public static method.
+ *   The patch itself verifies that the matched method is static.
+ * - No other fields are declared either, so matching uses the deterministic full class scan
+ *   instead of the indexed candidate search.
  */
 object StartCheckLicenceFingerprint : Fingerprint(
     returnType = "V",
     parameters = listOf("J"),
-    accessFlags = listOf(AccessFlags.STATIC),
-    filters = listOf(
-        methodCall(smali = "Landroid/util/Log;->i(Ljava/lang/String;Ljava/lang/String;)I")
-    ),
     custom = { method, _ ->
         method.implementation?.instructions?.any { instruction ->
             val opcode = instruction.opcode
