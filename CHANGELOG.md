@@ -1,3 +1,13 @@
+## [1.9.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.8.0...v1.9.0-dev.1) (2026-10-18)
+
+### 🐛 Bug Fixes
+
+* appIconColor value ([546c3b9](https://github.com/windwanderer/morphe-patches/commit/546c3b9b55d742984563502de7c5c556efe6bb7f))
+
+### ✨ New Features
+
+* add Stellarium patch ([7a24ea5](https://github.com/windwanderer/morphe-patches/commit/7a24ea570eb324cc61498ddaae2a6f5ea7be76bd))
+
 ## [1.8.0](https://github.com/windwanderer/morphe-patches/compare/v1.7.0...v1.8.0) (2026-10-10)
 
 ### ✨ New Features

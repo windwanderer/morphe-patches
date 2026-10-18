@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.8.0",
+  "version": "1.9.0-dev.1",
   "patches": [
     {
       "name": "MetService Premium",
@@ -72,6 +72,46 @@
             },
             {
               "version": "2.33.0",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Stellarium Premium",
+      "description": "Enable license OK state to unlock Stellarium Plus features.",
+      "default": true,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.noctuasoftware.stellarium_free",
+          "name": "Stellarium",
+          "description": null,
+          "apkFileType": "APK",
+          "appIconColor": "#0B1D3A",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.16.8",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.7",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.6",
               "versionCodes": null,
               "isExperimental": false,
               "minSdk": null,
