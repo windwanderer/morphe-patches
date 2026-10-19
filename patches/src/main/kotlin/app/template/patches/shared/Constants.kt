@@ -44,15 +44,13 @@ object Constants {
             // they do instead of matching their bytes, so it is expected to keep working
             // with releases after this one. The native license gate only exists in the
             // arm64-v8a build, so only that ABI is listed.
+            //
+            // Releases after 1.16.8 are not listed as a target: an entry with a null
+            // version makes Morphe Manager stop matching this package to the file it was
+            // given, and the patch is then not applied at all.
             AppTarget(
                 version = "1.16.8",
                 versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)
-            ),
-            AppTarget(
-                version = null,
-                description = "Other releases are patched on a best effort basis: the patch locates " +
-                    "the native license checks by symbol, verifies what they do before rewriting them, " +
-                    "and reports exactly what no longer matches when a release changed them."
             )
         )
     )
