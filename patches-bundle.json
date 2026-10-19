@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-19T08:07:58",
-  "description": "## [1.9.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.5...v1.9.0-dev.6) (2026-10-19)\n\n### ✨ New Features\n\n* skip the Play data pack request in the Stellarium Premium patch ([6a33c21](https://github.com/windwanderer/morphe-patches/commit/6a33c21963a1e72539fc5fedd571e406ab0c3456))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.6/patches-1.9.0-dev.6.mpp",
+  "created_at": "2026-10-19T08:45:43",
+  "description": "## [1.9.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.6...v1.9.0-dev.7) (2026-10-19)\n\n### 🐛 Bug Fixes\n\n* keep the Stellarium unlock from silently patching half the checks ([d85ebcd](https://github.com/windwanderer/morphe-patches/commit/d85ebcd4dade09800bc6f749c44138db06d67fd9))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.7/patches-1.9.0-dev.7.mpp",
   "signature_download_url": "",
-  "version": "1.9.0-dev.6"
+  "version": "1.9.0-dev.7"
 }

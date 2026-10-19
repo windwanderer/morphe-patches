@@ -1,3 +1,9 @@
+## [1.9.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.6...v1.9.0-dev.7) (2026-10-19)
+
+### 🐛 Bug Fixes
+
+* keep the Stellarium unlock from silently patching half the checks ([d85ebcd](https://github.com/windwanderer/morphe-patches/commit/d85ebcd4dade09800bc6f749c44138db06d67fd9))
+
 ## [1.9.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.5...v1.9.0-dev.6) (2026-10-19)
 
 ### ✨ New Features
