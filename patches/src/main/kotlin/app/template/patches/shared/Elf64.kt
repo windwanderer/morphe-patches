@@ -22,22 +22,23 @@ import app.morphe.patcher.patch.PatchException
  * - [offsetOf] converts a virtual address into a file offset.
  *
  * Unsupported or malformed libraries fail with a [PatchException] instead of
- * being patched blindly.
+ * being patched blindly. This is the [NativeLibrary] implementation for 64 bit
+ * Arm; see [ElfArm] for the 32 bit one.
  */
-internal class Elf64(private val bytes: ByteArray) {
+internal class Elf64(private val bytes: ByteArray) : NativeLibrary<Elf64.Symbol> {
 
     /** An entry of the dynamic symbol table. */
     internal class Symbol(
-        val name: String,
-        val address: Long,
-        val size: Long,
+        override val name: String,
+        override val address: Long,
+        override val size: Long,
         /** Index in `.dynsym`, which is what relocation tables refer to. */
         val index: Int,
         /** `st_info` symbol type, [TYPE_FUNCTION] for code. */
-        val type: Int,
-    ) {
+        override val type: Int,
+    ) : NativeLibrary.Symbol {
         /** Whether the symbol is code, as opposed to data or a section. */
-        val isFunction: Boolean get() = type == TYPE_FUNCTION || type == TYPE_INDIRECT_FUNCTION
+        override val isFunction: Boolean get() = type == TYPE_FUNCTION || type == TYPE_INDIRECT_FUNCTION
     }
 
     private class Section(
@@ -61,13 +62,13 @@ internal class Elf64(private val bytes: ByteArray) {
     private val symbolsByName: Map<String, Symbol> by lazy { readSymbols() }
 
     /** The dynamic symbol named [name], or null when the library has no such symbol. */
-    fun symbolOrNull(name: String): Symbol? = symbolsByName[name]
+    override fun symbolOrNull(name: String): Symbol? = symbolsByName[name]
 
     /**
      * Symbols whose name contains [text], which finds an anchor again after a
      * release changed the signature around it but kept the API name.
      */
-    fun symbolsContaining(text: String): List<Symbol> =
+    override fun symbolsContaining(text: String): List<Symbol> =
         symbolsByName.filterKeys { it.contains(text) }.values.toList()
 
     /**
@@ -75,7 +76,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * that calls it. Tail calling such a stub is how patched code reads an
      * imported function without knowing where the linker placed it.
      */
-    val pltStubs: Map<String, Long> by lazy { readPltStubsByName() }
+    override val pltStubs: Map<String, Long> by lazy { readPltStubsByName() }
 
     /**
      * Address of the PLT stub that calls [name].
@@ -107,9 +108,18 @@ internal class Elf64(private val bytes: ByteArray) {
      * Patches rewrite through this instead of [offsetOf], so a symbol that no
      * longer points into executable code is never written over.
      */
-    fun codeOffsetOf(address: Long): Int {
+    override fun codeOffsetOf(address: Long): Int {
         val section = codeSectionOf(address)
         return section.offset + (address - section.address).toInt()
+    }
+
+    /**
+     * How many bytes the instruction at the code address [address] is encoded
+     * in. AArch64 instructions are always 4 bytes wide.
+     */
+    override fun instructionSizeAt(address: Long): Int {
+        codeSectionOf(address)
+        return 4
     }
 
     /** The instruction words the function [symbol] is made of. */
@@ -132,7 +142,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * its constructors, and that call is what makes replacing its entry with a
      * `QVariant` construction of the patch's own an ABI compatible change.
      */
-    fun branchesTo(symbol: Symbol, targets: Set<Long>): Boolean {
+    override fun branchesTo(symbol: Symbol, targets: Set<Long>): Boolean {
         val words = instructions(symbol)
         for (index in words.indices) {
             val word = words[index]
@@ -151,7 +161,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * extended data pack, for example, is only ever reached as a call made by a
      * function the library does export.
      */
-    fun calledFunctions(symbol: Symbol): List<Long> {
+    override fun calledFunctions(symbol: Symbol): List<Long> {
         val words = instructions(symbol)
         val result = ArrayList<Long>()
         for (index in words.indices) {
@@ -166,7 +176,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * The addresses the `bl` instructions in the code starting at the address
      * [from] call, looking at most [byteCount] bytes ahead.
      */
-    fun calledFunctions(from: Long, byteCount: Int): List<Long> {
+    override fun calledFunctions(from: Long, byteCount: Int): List<Long> {
         val result = ArrayList<Long>()
         forEachInstruction(from, byteCount) { address, word ->
             if (word and BRANCH_MASK == BRANCH_LINK) {
@@ -184,7 +194,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * patch sees which data a function uses without depending on where the
      * linker placed anything.
      */
-    fun codeReferences(from: Long, address: Long, byteCount: Int): Boolean {
+    override fun codeReferences(from: Long, address: Long, byteCount: Int): Boolean {
         val words = ArrayList<Int>()
         forEachInstruction(from, byteCount) { _, word -> words += word }
 
@@ -208,7 +218,7 @@ internal class Elf64(private val bytes: ByteArray) {
      * The address of the NUL terminated string [text] in the library's loaded
      * data, or null when the library does not hold that exact string.
      */
-    fun stringAddressOrNull(text: String): Long? {
+    override fun stringAddressOrNull(text: String): Long? {
         val needle = "\u0000$text\u0000".toByteArray(Charsets.ISO_8859_1)
         var from = 0
         while (from <= bytes.size - needle.size) {
@@ -221,7 +231,7 @@ internal class Elf64(private val bytes: ByteArray) {
     }
 
     /** Whether [address] is executable code the patch may read or rewrite. */
-    fun isCode(address: Long): Boolean =
+    override fun isCode(address: Long): Boolean =
         sectionOf(address)?.let { it.flags and SHF_EXECINSTR != 0L } == true
 
     /** The section named [name], or null when the library has no such section. */

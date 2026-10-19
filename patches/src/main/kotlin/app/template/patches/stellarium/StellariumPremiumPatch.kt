@@ -4,15 +4,18 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.rawResourcePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_Stellarium
 import app.template.patches.shared.Elf64
+import app.template.patches.shared.ElfArm
+import app.template.patches.shared.NativeLibrary
 import java.security.MessageDigest
 import java.util.logging.Logger
 
 /*
- * Stellarium keeps the entire Plus feature set in
- * lib/arm64-v8a/libstellarium-mobile-plus_arm64-v8a.so, which is shipped
- * unstripped, so the license gate can be found by symbol name instead of a
- * per-release address. Four functions decide what the app believes it is
- * licensed for:
+ * Stellarium keeps the entire Plus feature set in a native library, which is
+ * shipped unstripped, so the license gate can be found by symbol name instead
+ * of a per-release address. A device loads it from the split of the ABI it runs,
+ * lib/arm64-v8a or lib/armeabi-v7a, and both builds answer the same license
+ * questions through the same API, so the patch reads whichever library the APK
+ * holds. Four functions decide what the app believes it is licensed for:
  *
  * - StelAPI::getHasFeaturePLUS() const is the gate every Plus feature (extended
  *   catalogs, deep sky surveys, ...) is checked against. It returns
@@ -37,11 +40,15 @@ import java.util.logging.Logger
  * well, because such an install can never receive the pack anyway.
  *
  * The patch is written to survive releases it was not built for. Instead of
- * asserting the bytes at each site, it verifies what the functions do:
+ * asserting the bytes at each site, it verifies what the functions do, in the
+ * instruction set of the architecture the library is built for:
  *
  * - the two checks that answer with a QVariant have to build one, by branching
  *   into a QVariant constructor. That call is also what proves that replacing
- *   their entry with a QVariant construction is an ABI compatible change,
+ *   their entry with a QVariant construction of the patch's own is an ABI
+ *   compatible change: 64 bit Arm passes the slot for the returned object in x8
+ *   and the receiver in x0, 32 bit Arm passes the slot in r0 and the receiver
+ *   right after it,
  * - the variant flag and the license status are found by their shape in the
  *   function, so register allocation and instruction order may change,
  * - the request for the extended data pack is followed from the call
@@ -92,18 +99,34 @@ private const val PLAY_ASSET_DELIVERY = "AssetPackManager_"
 private const val PACK_FUNCTION_SIZE = 0x400
 
 /**
- * The library holding the license gate. It sits in the arm64 split of the XAPK,
- * so it is found by the tail of the entry name it is listed under, which is the
- * same whether the split appears in the name or not.
+ * The library holding the license gate. It sits in the split of the ABI the
+ * device runs, so it is found under whichever lib directory the APK ships,
+ * whether the entry carries the name of the split or not.
  */
-private val PLUS_LIBRARY = Regex("""lib/arm64-v8a/libstellarium-mobile-plus(_arm64-v8a)?\.so$""")
+private val PLUS_LIBRARY = Regex("""lib/[^/]+/libstellarium-mobile-plus(_[A-Za-z0-9-]+)?\.so$""")
 
 private val logger = Logger.getLogger("StellariumPremium")
+
+// The library is architecture specific, and the patch rewrites machine code, so
+// the instruction set the ELF header declares decides how. `e_ident[EI_CLASS]`
+// is at offset 4 of the file, `e_machine` right after the ident.
+private const val ELF_HEADER_SIZE = 0x40
+private const val ELF_CLASS_32 = 1
+private const val ELF_CLASS_64 = 2
+private const val ELF_MACHINE = 0x12
+private const val MACHINE_ARM = 40
+private const val MACHINE_AARCH64 = 183
+
+// How many native libraries a failed lookup lists before it stops counting.
+private const val LISTED_LIBRARIES = 5
 
 // Sizes of the sequences the patch writes, in bytes.
 private const val LICENSE_RESULT_SIZE = 12
 private const val VARIANT_FLAG_SIZE = 4
 private const val LICENCE_STATUS_SIZE = 8
+private const val ARM_LICENSE_RESULT_SIZE = 8
+private const val ARM_VARIANT_FLAG_SIZE = 4
+private const val ARM_LICENCE_STATUS_SIZE = 4
 
 // AArch64 instructions used to rewrite the license checks. They are written as
 // hex words so they read like the disassembly they came from.
@@ -112,7 +135,16 @@ private val MOV_W1_1 = 0x52800021.toInt() // mov w1, #1: the bool to build a QVa
 private val MOV_W0_1 = 0x52800020.toInt() // mov w0, #1: LICENSED in StelAPI's status enum.
 private val RET = 0xD65F03C0.toInt() // ret
 
-// Fields of the instructions the shape of the license code is read through.
+// Thumb instructions used to rewrite the 32 bit license checks, written the
+// same way.
+private val ARM_MOVS_R1_1 = 0x2101 // movs r1, #1: the bool to build a QVariant from.
+private val ARM_MOVS_R0_1 = 0x2001 // movs r0, #1: LICENSED in StelAPI's status enum.
+private val ARM_BX_LR = 0x4770 // bx lr: return
+private val ARM_NOP = 0xBF00 // nop
+private val ARM_MOVS_ONE = 0x2000 // movs r<register>, #1
+
+// Fields of the AArch64 instructions the shape of the license code is read
+// through.
 private val LOAD_STORE_OPCODE_MASK = 0xFFC00000.toInt()
 private val LOAD_BYTE = 0x39400000.toInt() // ldrb w?, [x?, #imm]
 private val LOAD_WORD = 0xB9400000.toInt() // ldr w?, [x?, #imm]
@@ -121,10 +153,30 @@ private const val IMMEDIATE_12_SHIFT = 10
 private const val IMMEDIATE_12_MASK = 0xFFF
 private const val REGISTER_MASK = 0x1F
 
+// Fields of the Thumb instructions the shape of the 32 bit license code is read
+// through. The 16 bit forms carry a word offset scaled by 4 or a byte offset as
+// it is; the 32 bit forms carry every offset in bytes.
+private val ARM_LOAD_STORE_MASK = 0xF800
+private val ARM_LOAD_WORD16 = 0x6800 // ldr r?, [r?, #imm5 * 4]
+private val ARM_LOAD_BYTE16 = 0x7800 // ldrb r?, [r?, #imm5]
+private val ARM_LOAD_WIDE_MASK = 0xFFF0
+private val ARM_LOAD_WORD32 = 0xF8D0 // ldr.w r?, [r?, #imm12]
+private val ARM_LOAD_BYTE32 = 0xF890 // ldrb.w r?, [r?, #imm12]
+private val ARM_MOVS_MASK = 0xF800
+private const val ARM_OFFSET_5_MASK = 0x1F
+private const val ARM_REGISTER_MASK = 0xF
+private const val ARM_LOW_REGISTER_MASK = 0x7
+
 // The receiver x0 that C++ member functions are called with, and the register
 // holding the return value of a function that returns an `int`.
 private const val RECEIVER = 0
 private const val RETURN_WORD = 0
+
+// 32 bit Arm passes the slot for a returned object in r0 and the receiver of a
+// member function right after it, so a member that answers with a QVariant
+// (which needs that slot) sees its receiver in r1, while a plain getter of an
+// `int` sees it in r0.
+private const val ARM_RECEIVER = 1
 
 /**
  * `[x0, #0x10]` holds the bundle `getAppVariant()` reads its variant from, and
@@ -134,19 +186,25 @@ private const val RETURN_WORD = 0
 private const val BUNDLE_POINTER = 2
 private const val VARIANT_FLAG = 0x58
 
+/**
+ * The same two offsets in the 32 bit build: `[r1, #8]` holds the bundle (the
+ * receiver sits in r1) and the flag is the byte at `0x2c` of it.
+ */
+private const val ARM_BUNDLE_POINTER = 8
+private const val ARM_VARIANT_FLAG = 0x2C
+
 @Suppress("unused")
 val premiumPatch = rawResourcePatch(
     name = "Stellarium Premium",
     description = "Unlock Stellarium Plus by patching the native license checks, and skip the " +
-        "Play data pack request a sideloaded install cannot satisfy (arm64-v8a)."
+        "Play data pack request a sideloaded install cannot satisfy (arm64-v8a and armeabi-v7a)."
 ) {
     compatibleWith(COMPATIBILITY_Stellarium)
     execute {
-        val libraryEntry = listApkEntries("").firstOrNull { PLUS_LIBRARY.containsMatchIn(it) }
+        val libraries = listApkEntries("").filter { it.endsWith(".so") }
+        val libraryEntry = libraries.firstOrNull { PLUS_LIBRARY.containsMatchIn(it) }
             ?: throw PatchException(
-                "The APK has no lib/arm64-v8a/libstellarium-mobile-plus*.so. " +
-                    "The patch needs the arm64-v8a build that 64 bit devices install, " +
-                    "such as the 1.16.8 XAPK, and patches the merged APK."
+                "The APK has no lib/<abi>/libstellarium-mobile-plus*.so" + libraries.seen()
             )
         val library = get(libraryEntry)
         val bytes = library.readBytes()
@@ -155,55 +213,44 @@ val premiumPatch = rawResourcePatch(
         // the library the install uses.
         logger.info("Patching $libraryEntry (${bytes.size} bytes, sha-256 ${digestOf(bytes)})")
 
-        val elf = Elf64(bytes)
+        if (bytes.size < ELF_HEADER_SIZE || !startsWithElfMagic(bytes)) {
+            throw PatchException("The native library \"$libraryEntry\" is not an ELF library")
+        }
+        val elfClass = bytes[4].toInt() and 0xFF
+        val machine = (bytes[ELF_MACHINE].toInt() and 0xFF) or
+            ((bytes[ELF_MACHINE + 1].toInt() and 0xFF) shl 8)
 
-        // Both checks that answer with a QVariant build the QVariant they return
-        // by calling its constructor, with the return slot the caller passes in
-        // x8. That is what makes replacing their entry with a QVariant
-        // construction of the patch's own a change the caller cannot notice, so
-        // the patch verifies the call instead of the bytes around it.
-        val variantConstructors = elf.pltStubs
-            .filterKeys { it.startsWith(SYMBOL_QVARIANT_CONSTRUCTOR) }
-            .values.toSet()
-        val variantConstructor = elf.pltStubs[SYMBOL_QVARIANT_BOOL]
-            ?: throw PatchException(
-                "The native library does not import QVariant(bool) (\"$SYMBOL_QVARIANT_BOOL\"), " +
-                    "so the license checks cannot be answered with QVariant(true)"
+        // Both builds of the app answer the same license questions, so both get
+        // the same unlock, written in their own instruction set.
+        val edits = when {
+            elfClass == ELF_CLASS_64 && machine == MACHINE_AARCH64 -> aarch64Edits(Elf64(bytes))
+            elfClass == ELF_CLASS_32 && machine == MACHINE_ARM -> armEdits(ElfArm(bytes))
+            else -> throw PatchException(
+                "The native library \"$libraryEntry\" is not a 32 or 64 bit Arm library " +
+                    "(ELF class $elfClass, machine $machine), so the patch does not know how to " +
+                    "rewrite it"
             )
+        }
 
         val applied = ArrayList<String>()
         val skipped = ArrayList<String>()
 
-        fun apply(label: String, required: Boolean, edit: () -> NativeEdit) {
+        // All four license checks are patched: the app reads the gate, the
+        // answer it reports for the license, and the variant, so one of them
+        // left alone would let a "successful" patch still run as the free
+        // version. A release that reshapes one of them fails here instead,
+        // naming it.
+        for (plan in edits) {
             try {
-                val done = edit()
-                val where = "$label @0x${done.offset.toString(16)}"
+                val done = plan.build()
+                val where = "${plan.label} @0x${done.offset.toString(16)}"
                 applied += if (done.applyTo(bytes)) where else "$where (already patched)"
             } catch (error: PatchException) {
-                if (required) throw error
-                logger.warning("$label was left alone: ${error.message}")
-                skipped += label
+                if (plan.required) throw error
+                logger.warning("${plan.label} was left alone: ${error.message}")
+                skipped += plan.label
             }
         }
-
-        // All four checks are patched: the app reads the gate, the answer it
-        // reports for the license, and the variant, so one of them left alone
-        // would let a "successful" patch still run as the free version. A
-        // release that reshapes one of them fails here instead, naming it.
-        apply("getHasFeaturePLUS()", required = true) {
-            licenseResultEdit("getHasFeaturePLUS()", elf, HAS_FEATURE_PLUS, variantConstructors, variantConstructor)
-        }
-        apply("hasValidLicense()", required = true) {
-            licenseResultEdit("hasValidLicense()", elf, HAS_VALID_LICENSE, variantConstructors, variantConstructor)
-        }
-        apply("getAppVariant()", required = true) { appVariantEdit(elf) }
-        apply("getLicenceStatus()", required = true) { licenceStatusEdit(elf) }
-
-        // The extended data pack only ever reaches a Play install, so asking for
-        // it can only fail. Leaving the request out keeps the app from reporting
-        // that failure, and leaving the code in place keeps the patch working
-        // when a release renames or moves it.
-        apply("extended data pack", required = false) { extendedDataPackEdit(elf) }
 
         library.writeBytes(bytes)
 
@@ -215,8 +262,68 @@ val premiumPatch = rawResourcePatch(
 }
 
 /**
- * Rewrites a function that answers with a `QVariant(bool)` so that it always
- * answers `true`, by constructing the `QVariant` itself:
+ * One edit the patch is about to make: what it is called, whether a run that
+ * cannot make it has to fail, and the code that finds the site and builds the
+ * replacement.
+ */
+private class EditPlan(val label: String, val required: Boolean, val build: () -> NativeEdit)
+
+/** The edits that unlock a 64 bit Arm library. */
+private fun aarch64Edits(elf: Elf64): List<EditPlan> {
+    val constructors = variantConstructors(elf)
+    val constructor = variantConstructor(elf)
+
+    return listOf(
+        EditPlan("getHasFeaturePLUS()", required = true) {
+            aarch64LicenseResultEdit("getHasFeaturePLUS()", elf, HAS_FEATURE_PLUS, constructors, constructor)
+        },
+        EditPlan("hasValidLicense()", required = true) {
+            aarch64LicenseResultEdit("hasValidLicense()", elf, HAS_VALID_LICENSE, constructors, constructor)
+        },
+        EditPlan("getAppVariant()", required = true) { aarch64AppVariantEdit(elf) },
+        EditPlan("getLicenceStatus()", required = true) { aarch64LicenceStatusEdit(elf) },
+        EditPlan("extended data pack", required = false) { extendedDataPackEdit(elf, instruction(RET)) },
+    )
+}
+
+/** The same unlock for a 32 bit Arm library, which answers the same questions. */
+private fun armEdits(elf: ElfArm): List<EditPlan> {
+    val constructors = variantConstructors(elf)
+    val constructor = variantConstructor(elf)
+
+    return listOf(
+        EditPlan("getHasFeaturePLUS()", required = true) {
+            armLicenseResultEdit("getHasFeaturePLUS()", elf, HAS_FEATURE_PLUS, constructors, constructor)
+        },
+        EditPlan("hasValidLicense()", required = true) {
+            armLicenseResultEdit("hasValidLicense()", elf, HAS_VALID_LICENSE, constructors, constructor)
+        },
+        EditPlan("getAppVariant()", required = true) { armAppVariantEdit(elf) },
+        EditPlan("getLicenceStatus()", required = true) { armLicenceStatusEdit(elf) },
+        EditPlan("extended data pack", required = false) {
+            extendedDataPackEdit(elf, halfWord(ARM_BX_LR), halfWord(ARM_NOP))
+        },
+    )
+}
+
+/**
+ * The PLT stubs of every `QVariant` constructor the library imports, which is
+ * what the two checks that answer with a `QVariant` are recognized by.
+ */
+private fun <S : NativeLibrary.Symbol> variantConstructors(elf: NativeLibrary<S>): Set<Long> =
+    elf.pltStubs.filterKeys { it.startsWith(SYMBOL_QVARIANT_CONSTRUCTOR) }.values.toSet()
+
+/** The PLT stub of `QVariant::QVariant(bool)`, which every architecture imports. */
+private fun <S : NativeLibrary.Symbol> variantConstructor(elf: NativeLibrary<S>): Long =
+    elf.pltStubs[SYMBOL_QVARIANT_BOOL]
+        ?: throw PatchException(
+            "The native library does not import QVariant(bool) (\"$SYMBOL_QVARIANT_BOOL\"), " +
+                "so the license checks cannot be answered with QVariant(true)"
+        )
+
+/**
+ * Rewrites a 64 bit function that answers with a `QVariant(bool)` so that it
+ * always answers `true`, by constructing the `QVariant` itself:
  *
  * ```asm
  * mov x0, x8          ; the return slot the caller passed in x8
@@ -227,7 +334,7 @@ val premiumPatch = rawResourcePatch(
  * @throws PatchException If the function no longer builds a `QVariant`, which
  *   means the release moved or changed the license check.
  */
-private fun licenseResultEdit(
+private fun aarch64LicenseResultEdit(
     label: String,
     elf: Elf64,
     function: NativeFunction,
@@ -254,6 +361,50 @@ private fun licenseResultEdit(
 }
 
 /**
+ * The same rewrite for a 32 bit Arm function:
+ *
+ * ```asm
+ * movs r1, #1           ; true
+ * blx  QVariant(bool)   ; r0 holds the return slot the caller passed
+ * bx   lr               ; return to the caller
+ * ```
+ *
+ * The construction needs nothing but the value, because the caller passed the
+ * slot for the returned object in r0 and the receiver, which the function does
+ * not use, in r1. The imported constructor is Arm code, so the call has to be
+ * the `blx` that switches instruction set, and it leaves r0 alone, which is
+ * where the caller reads its `QVariant` from.
+ *
+ * @throws PatchException If the function no longer builds a `QVariant`, which
+ *   means the release moved or changed the license check.
+ */
+private fun armLicenseResultEdit(
+    label: String,
+    elf: ElfArm,
+    function: NativeFunction,
+    variantConstructors: Set<Long>,
+    variantConstructor: Long,
+): NativeEdit {
+    val symbol = elf.function(function)
+    requireFunction(symbol, label, ARM_LICENSE_RESULT_SIZE)
+
+    if (!elf.branchesTo(symbol, variantConstructors)) {
+        throw PatchException(
+            "$label does not build a QVariant anymore, so it is no longer the license check " +
+                "this patch replaces"
+        )
+    }
+
+    return NativeEdit(
+        label = label,
+        offset = elf.codeOffsetOf(symbol.address),
+        replacement = halfWord(ARM_MOVS_R1_1) +
+            armBranchLinkExchange(symbol.address + 2, variantConstructor) +
+            halfWord(ARM_BX_LR),
+    )
+}
+
+/**
  * Forces the variant flag of `getAppVariant()` to "plus":
  *
  * ```asm
@@ -271,7 +422,7 @@ private fun licenseResultEdit(
  *
  * @throws PatchException If the function no longer reads a variant flag.
  */
-private fun appVariantEdit(elf: Elf64): NativeEdit {
+private fun aarch64AppVariantEdit(elf: Elf64): NativeEdit {
     val label = "getAppVariant()"
     val symbol = elf.function(APP_VARIANT)
     requireFunction(symbol, label, VARIANT_FLAG_SIZE)
@@ -303,6 +454,47 @@ private fun appVariantEdit(elf: Elf64): NativeEdit {
 }
 
 /**
+ * The same rewrite for a 32 bit Arm function:
+ *
+ * ```asm
+ * ldr  r4, [r1, #8]      ; the loaded bundle
+ * ldrb r0, [r4, #0x2c]   ; its variant flag, replaced by `movs r0, #1`
+ * ```
+ *
+ * The flag load is replaced by a `movs` of the same width, with a `nop` when it
+ * was 4 bytes wide, so the instructions around it keep their alignment.
+ *
+ * @throws PatchException If the function no longer reads a variant flag.
+ */
+private fun armAppVariantEdit(elf: ElfArm): NativeEdit {
+    val label = "getAppVariant()"
+    val symbol = elf.function(APP_VARIANT)
+    requireFunction(symbol, label, ARM_VARIANT_FLAG_SIZE)
+
+    val instructions = elf.instructions(symbol)
+    for (index in 0 until instructions.size - 1) {
+        val bundle = armLoadBundle(instructions[index]) ?: continue
+        val flag = instructions[index + 1]
+
+        // Not the code that reads the variant flag, unless it is the patch's own
+        // work from an earlier run.
+        val register = armLoadVariantFlag(flag, bundle) ?: armForcedFlagRegister(flag) ?: continue
+
+        return NativeEdit(
+            label = label,
+            offset = elf.codeOffsetOf(flag.address),
+            replacement = armForcedFlag(register, flag.size),
+        )
+    }
+
+    throw PatchException(
+        "$label no longer reads a variant flag from the loaded bundle, and the app reads that " +
+            "flag to decide whether it reports the free or the plus variant. If this APK was " +
+            "already patched by an older version of this patch, patch its original copy again."
+    )
+}
+
+/**
  * Rewrites `getLicenceStatus()` from `ldr w0, [x0, #0x18] ; ret` to
  * `mov w0, #1 ; ret`, so the status reads as LICENSED instead of FAILED.
  *
@@ -310,7 +502,7 @@ private fun appVariantEdit(elf: Elf64): NativeEdit {
  *   status anymore, because a computed status may hide a failure the app
  *   handles, which the patch should not force away.
  */
-private fun licenceStatusEdit(elf: Elf64): NativeEdit {
+private fun aarch64LicenceStatusEdit(elf: Elf64): NativeEdit {
     val label = "getLicenceStatus()"
     val symbol = elf.function(LICENCE_STATUS)
     requireFunction(symbol, label, LICENCE_STATUS_SIZE)
@@ -328,6 +520,35 @@ private fun licenceStatusEdit(elf: Elf64): NativeEdit {
         label = label,
         offset = elf.codeOffsetOf(symbol.address),
         replacement = instruction(MOV_W0_1) + instruction(RET),
+    )
+}
+
+/**
+ * Rewrites `getLicenceStatus()` from `ldr r0, [r0, #0xc] ; bx lr` to
+ * `movs r0, #1 ; bx lr`, so the status reads as LICENSED instead of FAILED.
+ *
+ * @throws PatchException If the function is not a plain getter of a 32 bit
+ *   status anymore, because a computed status may hide a failure the app
+ *   handles, which the patch should not force away.
+ */
+private fun armLicenceStatusEdit(elf: ElfArm): NativeEdit {
+    val label = "getLicenceStatus()"
+    val symbol = elf.function(LICENCE_STATUS)
+    requireFunction(symbol, label, ARM_LICENCE_STATUS_SIZE)
+
+    val instructions = elf.instructions(symbol, maxBytes = 8)
+    val loadsStatus = instructions.size >= 2 && instructions[1].first == ARM_BX_LR &&
+        // The patch's own work from an earlier run reads as the same getter.
+        (instructions[0].first == ARM_MOVS_R0_1 || armLoadStatusWord(instructions[0]) != null)
+
+    if (!loadsStatus) {
+        throw PatchException("$label is not a plain getter of a 32 bit status anymore")
+    }
+
+    return NativeEdit(
+        label = label,
+        offset = elf.codeOffsetOf(symbol.address),
+        replacement = halfWord(ARM_MOVS_R0_1) + halfWord(ARM_BX_LR),
     )
 }
 
@@ -353,10 +574,18 @@ private fun licenceStatusEdit(elf: Elf64): NativeEdit {
  * only deliverable to a Play install, so nothing that a patched install could
  * have used is lost.
  *
+ * @param returnInstruction the return to write: `ret` on 64 bit Arm, `bx lr` on
+ *   32 bit.
+ * @param padding written after the return when the instruction it replaces is
+ *   wider than it, which keeps the instructions after it aligned.
  * @throws PatchException If the library no longer has that call, which means the
  *   release moved the pack registration somewhere the patch cannot find it.
  */
-private fun extendedDataPackEdit(elf: Elf64): NativeEdit {
+private fun <S : NativeLibrary.Symbol> extendedDataPackEdit(
+    elf: NativeLibrary<S>,
+    returnInstruction: ByteArray,
+    padding: ByteArray = ByteArray(0),
+): NativeEdit {
     val label = "extended data pack"
     val sources = elf.function(ADD_EXTENDED_SOURCES)
     requireFunction(sources, label, 4)
@@ -392,7 +621,9 @@ private fun extendedDataPackEdit(elf: Elf64): NativeEdit {
     return NativeEdit(
         label = label,
         offset = elf.codeOffsetOf(registrations.single()),
-        replacement = instruction(RET),
+        replacement = returnInstruction + padding.copyOf(
+            elf.instructionSizeAt(registrations.single()) - returnInstruction.size
+        ),
     )
 }
 
@@ -401,7 +632,7 @@ private fun extendedDataPackEdit(elf: Elf64): NativeEdit {
  * whose name contains it, which finds it again when a release changed a
  * signature around it but kept the API name.
  */
-private fun Elf64.function(function: NativeFunction): Elf64.Symbol {
+private fun <S : NativeLibrary.Symbol> NativeLibrary<S>.function(function: NativeFunction): S {
     symbolOrNull(function.symbol)?.let { return it }
 
     val candidates = symbolsContaining(function.name)
@@ -413,7 +644,7 @@ private fun Elf64.function(function: NativeFunction): Elf64.Symbol {
 }
 
 /** Rejects a symbol that is not code, or too small to hold [size] bytes of replacement. */
-private fun requireFunction(symbol: Elf64.Symbol, label: String, size: Int) {
+private fun requireFunction(symbol: NativeLibrary.Symbol, label: String, size: Int) {
     if (!symbol.isFunction) {
         throw PatchException("$label is not a function (ELF symbol type ${symbol.type})")
     }
@@ -450,6 +681,97 @@ private fun isForcedFlag(word: Int) = (word and 0xFFFFFFE0.toInt()) == MOV_W0_1
 
 /** `mov w<register>, #1`. */
 private fun moveOne(register: Int): Int = MOV_W0_1 or register
+
+/** `ldr r?, [r1, #8]`, the loaded bundle, or null when [instruction] is something else. */
+private fun armLoadBundle(instruction: ElfArm.Instruction): Int? {
+    val first = instruction.first
+
+    // `ldr r?, [r1, #imm5 * 4]`, the 16 bit encoding, whose offset is scaled.
+    if (instruction.size == 2 && first and ARM_LOAD_STORE_MASK == ARM_LOAD_WORD16) {
+        if (first shr 3 and ARM_LOW_REGISTER_MASK != ARM_RECEIVER) return null
+        if (first shr 6 and ARM_OFFSET_5_MASK shl 2 != ARM_BUNDLE_POINTER) return null
+        return first and ARM_LOW_REGISTER_MASK
+    }
+
+    // `ldr.w r?, [r1, #imm12]`, the 32 bit encoding, whose offset is in bytes.
+    if (instruction.size == 4 && first and ARM_LOAD_WIDE_MASK == ARM_LOAD_WORD32) {
+        if (first and ARM_REGISTER_MASK != ARM_RECEIVER) return null
+        if (instruction.second and 0xFFF != ARM_BUNDLE_POINTER) return null
+        return instruction.second shr 12 and ARM_REGISTER_MASK
+    }
+
+    return null
+}
+
+/** `ldrb r?, [<bundle>, #0x2c]`, the variant flag of [bundle], or null when [instruction] is something else. */
+private fun armLoadVariantFlag(instruction: ElfArm.Instruction, bundle: Int): Int? {
+    val first = instruction.first
+
+    // `ldrb r?, [r?, #imm5]`, the 16 bit encoding, whose offset is in bytes.
+    if (instruction.size == 2 && first and ARM_LOAD_STORE_MASK == ARM_LOAD_BYTE16) {
+        if (first shr 3 and ARM_LOW_REGISTER_MASK != bundle) return null
+        if (first shr 6 and ARM_OFFSET_5_MASK != ARM_VARIANT_FLAG) return null
+        return first and ARM_LOW_REGISTER_MASK
+    }
+
+    // `ldrb.w r?, [r?, #imm12]`, the 32 bit encoding, whose offset is in bytes too.
+    if (instruction.size == 4 && first and ARM_LOAD_WIDE_MASK == ARM_LOAD_BYTE32) {
+        if (first and ARM_REGISTER_MASK != bundle) return null
+        if (instruction.second and 0xFFF != ARM_VARIANT_FLAG) return null
+        return instruction.second shr 12 and ARM_REGISTER_MASK
+    }
+
+    return null
+}
+
+/** `ldr r0, [r0, #?]`, the status word of the receiver, or null when [instruction] is something else. */
+private fun armLoadStatusWord(instruction: ElfArm.Instruction): Int? {
+    val first = instruction.first
+
+    // `ldr r0, [r0, #imm5 * 4]`, the 16 bit encoding.
+    if (instruction.size == 2 && first and ARM_LOAD_STORE_MASK == ARM_LOAD_WORD16) {
+        if (first shr 3 and ARM_LOW_REGISTER_MASK != RETURN_WORD) return null
+        if (first and ARM_LOW_REGISTER_MASK != RETURN_WORD) return null
+        return RETURN_WORD
+    }
+
+    // `ldr.w r0, [r0, #imm12]`, the 32 bit encoding.
+    if (instruction.size == 4 && first and ARM_LOAD_WIDE_MASK == ARM_LOAD_WORD32) {
+        if (first and ARM_REGISTER_MASK != RETURN_WORD) return null
+        if (instruction.second shr 12 and ARM_REGISTER_MASK != RETURN_WORD) return null
+        return RETURN_WORD
+    }
+
+    return null
+}
+
+/** `movs r?, #1`, the variant flag forced to "plus", with the register left out. */
+private fun armForcedFlagRegister(instruction: ElfArm.Instruction): Int? {
+    if (instruction.size != 2) return null
+    if (instruction.first and ARM_MOVS_MASK != ARM_MOVS_ONE) return null
+    if (instruction.first and 0xFF != 1) return null
+    return instruction.first shr 8 and ARM_LOW_REGISTER_MASK
+}
+
+/** `movs r<register>, #1`, with a `nop` when the load it replaces was 4 bytes wide. */
+private fun armForcedFlag(register: Int, size: Int): ByteArray =
+    halfWord(ARM_MOVS_ONE or (register shl 8) or 1) +
+        if (size == 4) halfWord(ARM_NOP) else ByteArray(0)
+
+/** Whether [bytes] start with the ELF magic number. */
+private fun startsWithElfMagic(bytes: ByteArray): Boolean =
+    bytes[0] == 0x7F.toByte() && bytes[1] == 'E'.code.toByte() &&
+        bytes[2] == 'L'.code.toByte() && bytes[3] == 'F'.code.toByte()
+
+/** The native libraries a failed lookup saw, so the failure explains itself. */
+private fun List<String>.seen(): String = when {
+    isEmpty() -> ". The APK holds no native libraries at all"
+    size <= LISTED_LIBRARIES -> ". The APK holds ${joinToString(", ")}"
+    else -> {
+        val listed = take(LISTED_LIBRARIES).joinToString(", ")
+        ". The APK holds $listed and ${size - LISTED_LIBRARIES} more"
+    }
+}
 
 /**
  * One in place edit of a native library.
@@ -493,6 +815,12 @@ private fun instruction(value: Int): ByteArray = byteArrayOf(
     ((value ushr 24) and 0xFF).toByte(),
 )
 
+/** Encodes one Thumb half word as 2 little endian bytes. */
+private fun halfWord(value: Int): ByteArray = byteArrayOf(
+    (value and 0xFF).toByte(),
+    ((value ushr 8) and 0xFF).toByte(),
+)
+
 /** Encodes `b <to>` for an instruction placed at address [from]. */
 private fun branch(from: Long, to: Long): ByteArray {
     val immediate = (to - from) shr 2
@@ -501,4 +829,33 @@ private fun branch(from: Long, to: Long): ByteArray {
     }
 
     return instruction(0x14000000 or (immediate.toInt() and 0x03FFFFFF))
+}
+
+/**
+ * Encodes `blx <to>` for an instruction placed at the address [from].
+ *
+ * The imported constructor is Arm code, so the call has to be the `blx` that
+ * switches instruction set. It sets `lr` to the instruction after itself, which
+ * the `bx lr` that follows returns through.
+ */
+private fun armBranchLinkExchange(from: Long, to: Long): ByteArray {
+    val next = (from + 4) and -4L
+    val immediate = to - next
+    if (to and 0x3L != 0L || immediate < -(1L shl 24) || immediate >= 1L shl 24) {
+        throw PatchException(
+            "Cannot call 0x${to.toString(16)} from 0x${from.toString(16)}, it is too far away"
+        )
+    }
+
+    // A 25 bit offset split into a sign, two halves of the two halves and two
+    // inversion bits, which the processor undoes when it branches.
+    val value = immediate.toInt() and 0x01FFFFFF
+    val sign = value shr 24 and 1
+    val first = 0xF000 or (sign shl 10) or (value shr 12 and 0x3FF)
+    val second = 0xC000 or
+        ((sign xor (value shr 23 and 1) xor 1) shl 13) or
+        ((sign xor (value shr 22 and 1) xor 1) shl 11) or
+        (value shr 2 and 0x3FF shl 1)
+
+    return halfWord(first) + halfWord(second)
 }

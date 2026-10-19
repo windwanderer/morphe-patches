@@ -42,16 +42,21 @@ object Constants {
         targets = listOf(
             // The patch finds the native license checks by symbol name and verifies what
             // they do instead of matching their bytes, so it is expected to keep working
-            // with releases after this one. The native license gate only exists in the
-            // arm64-v8a build, so only that ABI is listed.
+            // with releases after these. Both builds of the app are handled: 1.16.8 ships
+            // the arm64-v8a library that 64 bit devices install, 1.16.5 only ships the
+            // armeabi-v7a one, and the patch rewrites whichever library the XAPK holds.
             //
-            // Releases after 1.16.8 are not listed as a target. A target with a null
-            // version was tried once and the patch then was not applied to the 1.16.8
-            // XAPK at all, while this pinned target is applied. Add each release that
-            // was tested as its own target instead of covering all of them at once.
+            // Releases after 1.16.8 are not listed as a target. Pinning the releases
+            // that were tested keeps the manager's "Unsupported Version" dialog in the
+            // way for the ones that were not, instead of promising support that was
+            // never verified. Add each release that was tested as a target of its own.
             AppTarget(
                 version = "1.16.8",
                 versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)
+            ),
+            AppTarget(
+                version = "1.16.5",
+                versionCodes = mapOf(SupportedAbi.ARMEABI_V7A to 11202)
             )
         )
     )
