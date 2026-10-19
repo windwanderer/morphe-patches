@@ -1,3 +1,9 @@
+## [1.9.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.8...v1.9.0-dev.9) (2026-10-19)
+
+### 🐛 Bug Fixes
+
+* log the entry, hash and edit offsets of the Stellarium patch ([48bc77e](https://github.com/windwanderer/morphe-patches/commit/48bc77e5dfbe5af292da32984e4ed031e314b23b))
+
 ## [1.9.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.7...v1.9.0-dev.8) (2026-10-19)
 
 ### 🐛 Bug Fixes
