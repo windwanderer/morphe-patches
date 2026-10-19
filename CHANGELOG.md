@@ -1,3 +1,9 @@
+## [1.9.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.4...v1.9.0-dev.5) (2026-10-19)
+
+### ✨ New Features
+
+* unlock Stellarium Plus with a native patch ([ba7b2c7](https://github.com/windwanderer/morphe-patches/commit/ba7b2c74140fc57c5ff4112553ab1f56ebc2eb55))
+
 ## [1.9.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.3...v1.9.0-dev.4) (2026-10-18)
 
 ### ✨ New Features
