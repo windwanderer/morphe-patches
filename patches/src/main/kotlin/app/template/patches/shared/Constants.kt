@@ -37,18 +37,15 @@ object Constants {
     val COMPATIBILITY_Stellarium = Compatibility(
         name = "Stellarium", // App name as it appears in the Android launcher.
         packageName = "com.noctuasoftware.stellarium_free",
-        apkFileType = ApkFileType.APK, // Preferred or recommended file type.
+        apkFileType = ApkFileType.XAPK, // Preferred or recommended file type.
         appIconColor = 0x0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
-            // Versions confirmed working with the patch.
+            // The patch rewrites the native license checks by symbol name and verifies
+            // every byte it replaces, so only builds it was developed against are listed.
+            // The native license gate only exists in the arm64-v8a build.
             AppTarget(
-                version = "1.16.8"
-            ),
-            AppTarget(
-                version = "1.16.7"
-            ),
-            AppTarget(
-                version = "1.16.6"
+                version = "1.16.8",
+                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)
             )
         )
     )
