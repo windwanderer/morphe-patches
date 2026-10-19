@@ -1,3 +1,9 @@
+## [1.9.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.7...v1.9.0-dev.8) (2026-10-19)
+
+### 🐛 Bug Fixes
+
+* list only the 1.16.8 target for the Stellarium patch again ([5328352](https://github.com/windwanderer/morphe-patches/commit/53283528ba512b4a31feefbeec9309e2eb219de4))
+
 ## [1.9.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.6...v1.9.0-dev.7) (2026-10-19)
 
 ### 🐛 Bug Fixes
