@@ -47,10 +47,14 @@ import java.util.logging.Logger
  *   `StelAPI::addExtendedSources()` makes, and recognized by the pack name its
  *   function uses and the Play Asset Delivery calls it reaches.
  *
- * Only the main gate has to be patched. When a release reshapes one of the other
- * three, that part is logged and left alone instead of failing the whole patch.
+ * The four license checks are patched together: the app reads all of them to
+ * decide what it reports and which features it enables, so leaving one alone
+ * would let a patch that reports success still run as the free version. A
+ * release that reshapes one of them fails the patch, with a message naming the
+ * function that changed. Only the request for the data pack is optional:
+ * skipping it leaves the app working, at worst with the data pack dialog back.
  * Nothing is ever patched blindly: a library whose checks no longer match fails
- * with a message saying what changed.
+ * instead.
  */
 
 /** A native function the patch rewrites, by mangled name and by plain C++ name. */
@@ -86,8 +90,12 @@ private const val PLAY_ASSET_DELIVERY = "AssetPackManager_"
 /** How far into the function that registers the pack the pack name and the Play calls sit. */
 private const val PACK_FUNCTION_SIZE = 0x400
 
-/** The library holding the license gate, as it is named inside the APK. */
-private val PLUS_LIBRARY = Regex("""lib/arm64-v8a/libstellarium-mobile-plus(_arm64-v8a)?\.so""")
+/**
+ * The library holding the license gate. It sits in the arm64 split of the XAPK,
+ * so it is found by the tail of the entry name it is listed under, which is the
+ * same whether the split appears in the name or not.
+ */
+private val PLUS_LIBRARY = Regex("""lib/arm64-v8a/libstellarium-mobile-plus(_arm64-v8a)?\.so$""")
 
 private val logger = Logger.getLogger("StellariumPremium")
 
@@ -133,12 +141,13 @@ val premiumPatch = rawResourcePatch(
 ) {
     compatibleWith(COMPATIBILITY_Stellarium)
     execute {
-        val libraryEntry = listApkEntries("lib/arm64-v8a/").firstOrNull { PLUS_LIBRARY.matches(it) }
+        val libraryEntry = listApkEntries("").firstOrNull { PLUS_LIBRARY.containsMatchIn(it) }
             ?: throw PatchException(
                 "The APK has no lib/arm64-v8a/libstellarium-mobile-plus*.so. " +
                     "The patch needs the arm64-v8a build that 64 bit devices install, " +
                     "such as the 1.16.8 XAPK, and patches the merged APK."
             )
+        logger.info("Patching $libraryEntry")
 
         val library = get(libraryEntry)
         val bytes = library.readBytes()
@@ -172,18 +181,18 @@ val premiumPatch = rawResourcePatch(
             }
         }
 
-        // getHasFeaturePLUS() is the gate every Plus feature is checked
-        // against, so it has to be patched. The other edits keep the state the
-        // app reports consistent, and are optional: a release that reshapes one
-        // of them must not take the unlock down with it.
+        // All four checks are patched: the app reads the gate, the answer it
+        // reports for the license, and the variant, so one of them left alone
+        // would let a "successful" patch still run as the free version. A
+        // release that reshapes one of them fails here instead, naming it.
         apply("getHasFeaturePLUS()", required = true) {
             licenseResultEdit("getHasFeaturePLUS()", elf, HAS_FEATURE_PLUS, variantConstructors, variantConstructor)
         }
-        apply("hasValidLicense()", required = false) {
+        apply("hasValidLicense()", required = true) {
             licenseResultEdit("hasValidLicense()", elf, HAS_VALID_LICENSE, variantConstructors, variantConstructor)
         }
-        apply("getAppVariant()", required = false) { appVariantEdit(elf) }
-        apply("getLicenceStatus()", required = false) { licenceStatusEdit(elf) }
+        apply("getAppVariant()", required = true) { appVariantEdit(elf) }
+        apply("getLicenceStatus()", required = true) { licenceStatusEdit(elf) }
 
         // The extended data pack only ever reaches a Play install, so asking for
         // it can only fail. Leaving the request out keeps the app from reporting
@@ -281,7 +290,11 @@ private fun appVariantEdit(elf: Elf64): NativeEdit {
         )
     }
 
-    throw PatchException("$label no longer reads a variant flag from the loaded bundle")
+    throw PatchException(
+        "$label no longer reads a variant flag from the loaded bundle, and the app reads that " +
+            "flag to decide whether it reports the free or the plus variant. If this APK was " +
+            "already patched by an older version of this patch, patch its original copy again."
+    )
 }
 
 /**
