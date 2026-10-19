@@ -1,3 +1,9 @@
+## [1.9.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.5...v1.9.0-dev.6) (2026-10-19)
+
+### ✨ New Features
+
+* skip the Play data pack request in the Stellarium Premium patch ([6a33c21](https://github.com/windwanderer/morphe-patches/commit/6a33c21963a1e72539fc5fedd571e406ab0c3456))
+
 ## [1.9.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.4...v1.9.0-dev.5) (2026-10-19)
 
 ### ✨ New Features

@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.9.0-dev.5",
+  "version": "1.9.0-dev.6",
   "patches": [
     {
       "name": "MetService Premium",
@@ -84,7 +84,7 @@
     },
     {
       "name": "Stellarium Premium",
-      "description": "Unlock Stellarium Plus by patching the native license checks (arm64-v8a).",
+      "description": "Unlock Stellarium Plus by patching the native license checks, and skip the Play data pack request a sideloaded install cannot satisfy (arm64-v8a).",
       "default": true,
       "category": null,
       "compatiblePackages": [
@@ -101,6 +101,13 @@
               "versionCodes": {
                 "ARM64_V8A": 11205
               },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": null,
+              "versionCodes": null,
               "isExperimental": false,
               "minSdk": null,
               "description": null

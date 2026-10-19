@@ -15,7 +15,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.9.0-dev.5](https://github.com/windwanderer/morphe-patches/releases/tag/v1.9.0-dev.5)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v1.9.0-dev.6](https://github.com/windwanderer/morphe-patches/releases/tag/v1.9.0-dev.6)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
 <details open>
 <summary>📦 MetService&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
@@ -43,7 +43,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
-| [Stellarium Premium](#stellarium-premium) | Unlock Stellarium Plus by patching the native license checks (arm64-v8a). |  |
+| [Stellarium Premium](#stellarium-premium) | Unlock Stellarium Plus by patching the native license checks, and skip the Play data pack request a sideloaded install cannot satisfy (arm64-v8a). |  |
 
 </details>
 
