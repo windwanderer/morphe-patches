@@ -1,3 +1,9 @@
+## [1.9.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.9...v1.9.0-dev.10) (2026-10-19)
+
+### ✨ New Features
+
+* unlock Stellarium Plus on 32 bit devices too ([3c19423](https://github.com/windwanderer/morphe-patches/commit/3c1942361fe94e58f7c6547f57b933283d40f817)), closes [#1](https://github.com/windwanderer/morphe-patches/issues/1)
+
 ## [1.9.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.8...v1.9.0-dev.9) (2026-10-19)
 
 ### 🐛 Bug Fixes
