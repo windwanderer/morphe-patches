@@ -124,7 +124,7 @@ private const val LISTED_LIBRARIES = 5
 private const val LICENSE_RESULT_SIZE = 12
 private const val VARIANT_FLAG_SIZE = 4
 private const val LICENCE_STATUS_SIZE = 8
-private const val ARM_LICENSE_RESULT_SIZE = 8
+private const val ARM_LICENSE_RESULT_SIZE = 12
 private const val ARM_VARIANT_FLAG_SIZE = 4
 private const val ARM_LICENCE_STATUS_SIZE = 4
 
@@ -141,6 +141,8 @@ private val ARM_MOVS_R1_1 = 0x2101 // movs r1, #1: the bool to build a QVariant 
 private val ARM_MOVS_R0_1 = 0x2001 // movs r0, #1: LICENSED in StelAPI's status enum.
 private val ARM_BX_LR = 0x4770 // bx lr: return
 private val ARM_NOP = 0xBF00 // nop
+private val ARM_PUSH_R0_LR = 0xB501 // push {r0, lr}: the return slot and the return address
+private val ARM_POP_R0_PC = 0xBD01 // pop {r0, pc}: restore the slot and return
 private val ARM_MOVS_ONE = 0x2000 // movs r<register>, #1
 
 // Fields of the AArch64 instructions the shape of the license code is read
@@ -364,16 +366,20 @@ private fun aarch64LicenseResultEdit(
  * The same rewrite for a 32 bit Arm function:
  *
  * ```asm
+ * push {r0, lr}         ; the return slot the caller passed in r0, and the return address
  * movs r1, #1           ; true
- * blx  QVariant(bool)   ; r0 holds the return slot the caller passed
- * bx   lr               ; return to the caller
+ * blx  QVariant(bool)   ; r0 still holds the return slot
+ * pop  {r0, pc}         ; restore the slot and return to the caller
  * ```
  *
  * The construction needs nothing but the value, because the caller passed the
  * slot for the returned object in r0 and the receiver, which the function does
  * not use, in r1. The imported constructor is Arm code, so the call has to be
- * the `blx` that switches instruction set, and it leaves r0 alone, which is
- * where the caller reads its `QVariant` from.
+ * the `blx` that switches instruction set. A `blx` overwrites `lr` with the
+ * address of the instruction after itself, so the caller's return address is
+ * saved on the stack first, and the slot is saved with it to be handed back in
+ * r0 without relying on what the constructor leaves there. Saving two registers
+ * keeps the stack eight byte aligned at the call, as the ABI requires.
  *
  * @throws PatchException If the function no longer builds a `QVariant`, which
  *   means the release moved or changed the license check.
@@ -398,9 +404,11 @@ private fun armLicenseResultEdit(
     return NativeEdit(
         label = label,
         offset = elf.codeOffsetOf(symbol.address),
-        replacement = halfWord(ARM_MOVS_R1_1) +
-            armBranchLinkExchange(symbol.address + 2, variantConstructor) +
-            halfWord(ARM_BX_LR),
+        replacement = halfWord(ARM_PUSH_R0_LR) +
+            halfWord(ARM_MOVS_R1_1) +
+            armBranchLinkExchange(symbol.address + 4, variantConstructor) +
+            halfWord(ARM_POP_R0_PC) +
+            halfWord(ARM_NOP),
     )
 }
 
@@ -835,8 +843,9 @@ private fun branch(from: Long, to: Long): ByteArray {
  * Encodes `blx <to>` for an instruction placed at the address [from].
  *
  * The imported constructor is Arm code, so the call has to be the `blx` that
- * switches instruction set. It sets `lr` to the instruction after itself, which
- * the `bx lr` that follows returns through.
+ * switches instruction set. `blx` also overwrites `lr` with the address of the
+ * instruction after itself, so the caller has to save its own return address
+ * before the call.
  */
 private fun armBranchLinkExchange(from: Long, to: Long): ByteArray {
     val next = (from + 4) and -4L
