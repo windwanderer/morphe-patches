@@ -40,12 +40,19 @@ object Constants {
         apkFileType = ApkFileType.XAPK, // Preferred or recommended file type.
         appIconColor = 0x0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
-            // The patch rewrites the native license checks by symbol name and verifies
-            // every byte it replaces, so only builds it was developed against are listed.
-            // The native license gate only exists in the arm64-v8a build.
+            // The patch finds the native license checks by symbol name and verifies what
+            // they do instead of matching their bytes, so it is expected to keep working
+            // with releases after this one. The native license gate only exists in the
+            // arm64-v8a build, so only that ABI is listed.
             AppTarget(
                 version = "1.16.8",
                 versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)
+            ),
+            AppTarget(
+                version = null,
+                description = "Other releases are patched on a best effort basis: the patch locates " +
+                    "the native license checks by symbol, verifies what they do before rewriting them, " +
+                    "and reports exactly what no longer matches when a release changed them."
             )
         )
     )
