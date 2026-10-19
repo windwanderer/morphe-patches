@@ -45,9 +45,10 @@ object Constants {
             // with releases after this one. The native license gate only exists in the
             // arm64-v8a build, so only that ABI is listed.
             //
-            // Releases after 1.16.8 are not listed as a target: an entry with a null
-            // version makes Morphe Manager stop matching this package to the file it was
-            // given, and the patch is then not applied at all.
+            // Releases after 1.16.8 are not listed as a target. A target with a null
+            // version was tried once and the patch then was not applied to the 1.16.8
+            // XAPK at all, while this pinned target is applied. Add each release that
+            // was tested as its own target instead of covering all of them at once.
             AppTarget(
                 version = "1.16.8",
                 versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)

@@ -4,6 +4,7 @@ import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.rawResourcePatch
 import app.template.patches.shared.Constants.COMPATIBILITY_Stellarium
 import app.template.patches.shared.Elf64
+import java.security.MessageDigest
 import java.util.logging.Logger
 
 /*
@@ -147,10 +148,13 @@ val premiumPatch = rawResourcePatch(
                     "The patch needs the arm64-v8a build that 64 bit devices install, " +
                     "such as the 1.16.8 XAPK, and patches the merged APK."
             )
-        logger.info("Patching $libraryEntry")
-
         val library = get(libraryEntry)
         val bytes = library.readBytes()
+        // The entry and the hash of the input go to the log, so a run that did not
+        // end up unlocking the app can be told apart from one that never patched
+        // the library the install uses.
+        logger.info("Patching $libraryEntry (${bytes.size} bytes, sha-256 ${digestOf(bytes)})")
+
         val elf = Elf64(bytes)
 
         // Both checks that answer with a QVariant build the QVariant they return
@@ -173,7 +177,8 @@ val premiumPatch = rawResourcePatch(
         fun apply(label: String, required: Boolean, edit: () -> NativeEdit) {
             try {
                 val done = edit()
-                applied += if (done.applyTo(bytes)) label else "$label (already patched)"
+                val where = "$label @0x${done.offset.toString(16)}"
+                applied += if (done.applyTo(bytes)) where else "$where (already patched)"
             } catch (error: PatchException) {
                 if (required) throw error
                 logger.warning("$label was left alone: ${error.message}")
@@ -454,7 +459,7 @@ private fun moveOne(register: Int): Int = MOV_W0_1 or register
  */
 private class NativeEdit(
     val label: String,
-    private val offset: Int,
+    val offset: Int,
     private val replacement: ByteArray,
 ) {
     /** Writes the replacement, and answers whether anything was written. */
@@ -473,6 +478,12 @@ private class NativeEdit(
         return true
     }
 }
+
+/** The first bytes of the SHA-256 of [bytes], to identify a library in a log. */
+private fun digestOf(bytes: ByteArray): String =
+    MessageDigest.getInstance("SHA-256").digest(bytes)
+        .take(8)
+        .joinToString("") { "%02x".format(it) }
 
 /** Encodes one AArch64 instruction as 4 little endian bytes. */
 private fun instruction(value: Int): ByteArray = byteArrayOf(
