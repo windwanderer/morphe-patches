@@ -1,3 +1,9 @@
+## [1.9.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.10...v1.9.0-dev.11) (2026-10-19)
+
+### 🐛 Bug Fixes
+
+* return the 32 bit license checks to their caller ([78e920f](https://github.com/windwanderer/morphe-patches/commit/78e920ff3f7915e9b8a0fc3e3a457fdc783a60e7))
+
 ## [1.9.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.9...v1.9.0-dev.10) (2026-10-19)
 
 ### ✨ New Features

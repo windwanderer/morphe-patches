@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-19T11:08:10",
-  "description": "## [1.9.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.9...v1.9.0-dev.10) (2026-10-19)\n\n### ✨ New Features\n\n* unlock Stellarium Plus on 32 bit devices too ([3c19423](https://github.com/windwanderer/morphe-patches/commit/3c1942361fe94e58f7c6547f57b933283d40f817)), closes [#1](https://github.com/windwanderer/morphe-patches/issues/1)",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.10/patches-1.9.0-dev.10.mpp",
+  "created_at": "2026-10-19T23:00:19",
+  "description": "## [1.9.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.10...v1.9.0-dev.11) (2026-10-19)\n\n### 🐛 Bug Fixes\n\n* return the 32 bit license checks to their caller ([78e920f](https://github.com/windwanderer/morphe-patches/commit/78e920ff3f7915e9b8a0fc3e3a457fdc783a60e7))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.11/patches-1.9.0-dev.11.mpp",
   "signature_download_url": "",
-  "version": "1.9.0-dev.10"
+  "version": "1.9.0-dev.11"
 }
