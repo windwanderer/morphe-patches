@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.9.0-dev.12",
+  "version": "1.9.0-dev.13",
   "patches": [
     {
       "name": "MetService Premium",
@@ -73,6 +73,120 @@
             {
               "version": "2.33.0",
               "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Stellarium Extended Catalog",
+      "description": "Import a locally downloaded extended catalog ZIP instead of waiting for a Play Asset Delivery download that a sideloaded install can never receive. Nothing is downloaded and nothing is requested at launch; without a ZIP the app is unchanged.",
+      "default": false,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.noctuasoftware.stellarium_free",
+          "name": "Stellarium",
+          "description": null,
+          "apkFileType": "XAPK",
+          "appIconColor": "#0B1D3A",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.16.8",
+              "versionCodes": {
+                "ARM64_V8A": 11205,
+                "ARMEABI_V7A": 11205
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.7",
+              "versionCodes": {
+                "ARM64_V8A": 11204,
+                "ARMEABI_V7A": 11204
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.5",
+              "versionCodes": {
+                "ARMEABI_V7A": 11202
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.3",
+              "versionCodes": {
+                "ARM64_V8A": 11200
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
+    {
+      "name": "Stellarium Extended Catalog (ZIP support)",
+      "description": "Adds the \"open with\" and share-sheet entries that let Stellarium receive a locally downloaded extended catalog ZIP. Used by Stellarium Extended Catalog.",
+      "default": false,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.noctuasoftware.stellarium_free",
+          "name": "Stellarium",
+          "description": null,
+          "apkFileType": "XAPK",
+          "appIconColor": "#0B1D3A",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "1.16.8",
+              "versionCodes": {
+                "ARM64_V8A": 11205,
+                "ARMEABI_V7A": 11205
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.7",
+              "versionCodes": {
+                "ARM64_V8A": 11204,
+                "ARMEABI_V7A": 11204
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.5",
+              "versionCodes": {
+                "ARMEABI_V7A": 11202
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.3",
+              "versionCodes": {
+                "ARM64_V8A": 11200
+              },
               "isExperimental": false,
               "minSdk": null,
               "description": null

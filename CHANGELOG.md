@@ -1,3 +1,9 @@
+## [1.9.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.12...v1.9.0-dev.13) (2026-10-20)
+
+### ✨ New Features
+
+* import Stellarium extended catalogs from a local ZIP ([43d025c](https://github.com/windwanderer/morphe-patches/commit/43d025c99683433c90a7b2f30b1c140bf5511f24))
+
 ## [1.9.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.11...v1.9.0-dev.12) (2026-10-20)
 
 ### ✨ New Features
