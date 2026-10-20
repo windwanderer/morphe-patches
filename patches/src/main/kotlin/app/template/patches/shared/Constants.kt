@@ -41,22 +41,39 @@ object Constants {
         appIconColor = 0x0B1D3A, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
             // The patch finds the native license checks by symbol name and verifies what
-            // they do instead of matching their bytes, so it is expected to keep working
-            // with releases after these. Both builds of the app are handled: 1.16.8 ships
-            // the arm64-v8a library that 64 bit devices install, 1.16.5 only ships the
-            // armeabi-v7a one, and the patch rewrites whichever library the XAPK holds.
+            // they do instead of matching their bytes, so it keeps working with releases
+            // that were not built for. Every release whose library was inspected and
+            // patched is listed here as a target of its own, in both builds where
+            // APKPure published both: 1.16.7 and 1.16.8 ship an arm64-v8a and an
+            // armeabi-v7a XAPK under the same version code, 1.16.5 was published for
+            // armeabi-v7a and 1.16.3 for arm64-v8a only. The patch rewrites whichever
+            // library the XAPK holds, and every copy if it holds more than one.
             //
-            // Releases after 1.16.8 are not listed as a target. Pinning the releases
-            // that were tested keeps the manager's "Unsupported Version" dialog in the
-            // way for the ones that were not, instead of promising support that was
-            // never verified. Add each release that was tested as a target of its own.
+            // Releases after 1.16.8 are not listed. Pinning the releases that were
+            // tested keeps the manager's "Unsupported Version" dialog in the way for
+            // the ones that were not, instead of promising support that was never
+            // verified. Add each release that was tested as a target of its own.
             AppTarget(
                 version = "1.16.8",
-                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11205)
+                versionCodes = mapOf(
+                    SupportedAbi.ARM64_V8A to 11205,
+                    SupportedAbi.ARMEABI_V7A to 11205
+                )
+            ),
+            AppTarget(
+                version = "1.16.7",
+                versionCodes = mapOf(
+                    SupportedAbi.ARM64_V8A to 11204,
+                    SupportedAbi.ARMEABI_V7A to 11204
+                )
             ),
             AppTarget(
                 version = "1.16.5",
                 versionCodes = mapOf(SupportedAbi.ARMEABI_V7A to 11202)
+            ),
+            AppTarget(
+                version = "1.16.3",
+                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 11200)
             )
         )
     )

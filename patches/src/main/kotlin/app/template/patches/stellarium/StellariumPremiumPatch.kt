@@ -14,8 +14,9 @@ import java.util.logging.Logger
  * shipped unstripped, so the license gate can be found by symbol name instead
  * of a per-release address. A device loads it from the split of the ABI it runs,
  * lib/arm64-v8a or lib/armeabi-v7a, and both builds answer the same license
- * questions through the same API, so the patch reads whichever library the APK
- * holds. Four functions decide what the app believes it is licensed for:
+ * questions through the same API, so the patch rewrites whichever libraries the
+ * APK holds, one or both. Four functions decide what the app believes it is
+ * licensed for:
  *
  * - StelAPI::getHasFeaturePLUS() const is the gate every Plus feature (extended
  *   catalogs, deep sky surveys, ...) is checked against. It returns
@@ -151,6 +152,13 @@ private val LOAD_STORE_OPCODE_MASK = 0xFFC00000.toInt()
 private val LOAD_BYTE = 0x39400000.toInt() // ldrb w?, [x?, #imm]
 private val LOAD_WORD = 0xB9400000.toInt() // ldr w?, [x?, #imm]
 private val LOAD_DOUBLEWORD = 0xF9400000.toInt() // ldr x?, [x?, #imm]
+
+// `cbz` and `cbnz`, how the variant flag is tested. The mask clears the width
+// bit, the immediate and the register, so the 32 and the 64 bit forms both
+// match.
+private val BRANCH_IF_ZERO_MASK = 0x7F000000
+private val BRANCH_IF_ZERO = 0x34000000
+private val BRANCH_IF_NONZERO = 0x35000000
 private const val IMMEDIATE_12_SHIFT = 10
 private const val IMMEDIATE_12_MASK = 0xFFF
 private const val REGISTER_MASK = 0x1F
@@ -165,6 +173,12 @@ private val ARM_LOAD_WIDE_MASK = 0xFFF0
 private val ARM_LOAD_WORD32 = 0xF8D0 // ldr.w r?, [r?, #imm12]
 private val ARM_LOAD_BYTE32 = 0xF890 // ldrb.w r?, [r?, #imm12]
 private val ARM_MOVS_MASK = 0xF800
+
+// `cbz r?` and `cbnz r?`, how the variant flag is tested. The mask clears the
+// sign bit of the immediate, the immediate itself and the register.
+private const val ARM_BRANCH_IF_ZERO = 0xB100
+private const val ARM_BRANCH_IF_NONZERO = 0xB900
+private const val ARM_BRANCH_IF_ZERO_MASK = 0xFD00
 private const val ARM_OFFSET_5_MASK = 0x1F
 private const val ARM_REGISTER_MASK = 0xF
 private const val ARM_LOW_REGISTER_MASK = 0x7
@@ -182,8 +196,8 @@ private const val ARM_RECEIVER = 1
 
 /**
  * `[x0, #0x10]` holds the bundle `getAppVariant()` reads its variant from, and
- * the flag is the byte at `0x58` of it. The offset is stored as an immediate of
- * 2, because 64 bit loads are scaled by 8.
+ * the flag is the byte at `0x58` of it in every release so far. The offset is
+ * stored as an immediate of 2, because 64 bit loads are scaled by 8.
  */
 private const val BUNDLE_POINTER = 2
 private const val VARIANT_FLAG = 0x58
@@ -204,63 +218,88 @@ val premiumPatch = rawResourcePatch(
     compatibleWith(COMPATIBILITY_Stellarium)
     execute {
         val libraries = listApkEntries("").filter { it.endsWith(".so") }
-        val libraryEntry = libraries.firstOrNull { PLUS_LIBRARY.containsMatchIn(it) }
-            ?: throw PatchException(
+        val libraryEntries = libraries.filter { PLUS_LIBRARY.containsMatchIn(it) }
+        if (libraryEntries.isEmpty()) {
+            throw PatchException(
                 "The APK has no lib/<abi>/libstellarium-mobile-plus*.so" + libraries.seen()
             )
-        val library = get(libraryEntry)
-        val bytes = library.readBytes()
-        // The entry and the hash of the input go to the log, so a run that did not
-        // end up unlocking the app can be told apart from one that never patched
-        // the library the install uses.
-        logger.info("Patching $libraryEntry (${bytes.size} bytes, sha-256 ${digestOf(bytes)})")
-
-        if (bytes.size < ELF_HEADER_SIZE || !startsWithElfMagic(bytes)) {
-            throw PatchException("The native library \"$libraryEntry\" is not an ELF library")
-        }
-        val elfClass = bytes[4].toInt() and 0xFF
-        val machine = (bytes[ELF_MACHINE].toInt() and 0xFF) or
-            ((bytes[ELF_MACHINE + 1].toInt() and 0xFF) shl 8)
-
-        // Both builds of the app answer the same license questions, so both get
-        // the same unlock, written in their own instruction set.
-        val edits = when {
-            elfClass == ELF_CLASS_64 && machine == MACHINE_AARCH64 -> aarch64Edits(Elf64(bytes))
-            elfClass == ELF_CLASS_32 && machine == MACHINE_ARM -> armEdits(ElfArm(bytes))
-            else -> throw PatchException(
-                "The native library \"$libraryEntry\" is not a 32 or 64 bit Arm library " +
-                    "(ELF class $elfClass, machine $machine), so the patch does not know how to " +
-                    "rewrite it"
-            )
         }
 
-        val applied = ArrayList<String>()
-        val skipped = ArrayList<String>()
-
-        // All four license checks are patched: the app reads the gate, the
-        // answer it reports for the license, and the variant, so one of them
-        // left alone would let a "successful" patch still run as the free
-        // version. A release that reshapes one of them fails here instead,
-        // naming it.
-        for (plan in edits) {
-            try {
-                val done = plan.build()
-                val where = "${plan.label} @0x${done.offset.toString(16)}"
-                applied += if (done.applyTo(bytes)) where else "$where (already patched)"
-            } catch (error: PatchException) {
-                if (plan.required) throw error
-                logger.warning("${plan.label} was left alone: ${error.message}")
-                skipped += plan.label
-            }
-        }
-
-        library.writeBytes(bytes)
-
-        logger.info("Patched the native library: ${applied.joinToString(", ")}")
-        if (skipped.isNotEmpty()) {
-            logger.warning("These were not patched: ${skipped.joinToString(", ")}")
+        // An APK can hold a library per ABI (and the same library again without
+        // the split suffix), so every copy it holds is unlocked, not just the
+        // first one the entries happen to list.
+        for (libraryEntry in libraryEntries) {
+            val library = get(libraryEntry)
+            val bytes = library.readBytes()
+            // The entry and the hash of the input go to the log, so a run that
+            // did not end up unlocking the app can be told apart from one that
+            // never patched the library the install uses.
+            logger.info("Patching $libraryEntry (${bytes.size} bytes, sha-256 ${digestOf(bytes)})")
+            val applied = patchNativeLibrary(libraryEntry, bytes)
+            library.writeBytes(bytes)
+            logger.info("Patched the native library: $applied")
         }
     }
+}
+
+/**
+ * Applies the unlock to one native library in [bytes] and answers what was
+ * applied, so the log names the functions that were rewritten.
+ *
+ * The library is identified by its ELF header, not by its file name: a
+ * 64 bit AArch64 library is rewritten in AArch64 and a 32 bit Arm library in
+ * Thumb, and a library of another machine fails the patch instead of being
+ * guessed at.
+ *
+ * A required edit that no longer matches fails the whole patch, naming the
+ * function that changed; the request for the data pack is the only optional
+ * one and is reported instead.
+ */
+private fun patchNativeLibrary(entry: String, bytes: ByteArray): String {
+    if (bytes.size < ELF_HEADER_SIZE || !startsWithElfMagic(bytes)) {
+        throw PatchException("The native library \"$entry\" is not an ELF library")
+    }
+    val elfClass = bytes[4].toInt() and 0xFF
+    val machine = (bytes[ELF_MACHINE].toInt() and 0xFF) or
+        ((bytes[ELF_MACHINE + 1].toInt() and 0xFF) shl 8)
+
+    // Both builds of the app answer the same license questions, so both get
+    // the same unlock, written in their own instruction set.
+    val edits = when {
+        elfClass == ELF_CLASS_64 && machine == MACHINE_AARCH64 -> aarch64Edits(Elf64(bytes))
+        elfClass == ELF_CLASS_32 && machine == MACHINE_ARM -> armEdits(ElfArm(bytes))
+        else -> throw PatchException(
+            "The native library \"$entry\" is not a 32 or 64 bit Arm library " +
+                "(ELF class $elfClass, machine $machine), so the patch does not know how to " +
+                "rewrite it"
+        )
+    }
+
+    val applied = ArrayList<String>()
+    val skipped = ArrayList<String>()
+
+    // All four license checks are patched: the app reads the gate, the
+    // answer it reports for the license, and the variant, so one of them
+    // left alone would let a "successful" patch still run as the free
+    // version. A release that reshapes one of them fails here instead,
+    // naming it.
+    for (plan in edits) {
+        try {
+            val done = plan.build()
+            val where = "${plan.label} @0x${done.offset.toString(16)}"
+            applied += if (done.applyTo(bytes)) where else "$where (already patched)"
+        } catch (error: PatchException) {
+            if (plan.required) throw error
+            logger.warning("$entry: ${plan.label} was left alone: ${error.message}")
+            skipped += plan.label
+        }
+    }
+
+    if (skipped.isNotEmpty()) {
+        logger.warning("$entry: these were not patched: ${skipped.joinToString(", ")}")
+    }
+
+    return applied.joinToString(", ")
 }
 
 /**
@@ -418,12 +457,16 @@ private fun armLicenseResultEdit(
  * ```asm
  * ldr  x9, [x0, #0x10]   ; the loaded bundle
  * ldrb w9, [x9, #0x58]   ; its variant flag, replaced by `mov w9, #1`
+ * cbz  w9, ...           ; the test the flag is read for
  * ```
  *
- * The two loads are found by their shape anywhere in the function, so a release
- * may move the prologue around them, allocate other registers, or compile the
- * two paths of the check in the opposite order: the function reads the flag as
- * set and reports "plus" in every case.
+ * The loads are found by their shape, so a release may move the prologue
+ * around them or allocate other registers. The flag sits at 0x58 of the bundle
+ * in every release seen so far; a release that moves it inside the bundle is
+ * still found, because the flag is the byte the function reads from the bundle
+ * and tests for zero, so a second pass accepts any offset it finds that shape
+ * at. The function reads no other byte from the bundle, and the zero test keeps
+ * the patch from rewriting a different load.
  *
  * The only register whose contents change is the one the flag was read into, so
  * the rest of the function keeps working as it is.
@@ -436,22 +479,23 @@ private fun aarch64AppVariantEdit(elf: Elf64): NativeEdit {
     requireFunction(symbol, label, VARIANT_FLAG_SIZE)
 
     val words = elf.instructions(symbol)
-    for (index in 0 until words.size - 1) {
-        val bundle = loadBundle(words[index]) ?: continue
+    for (exact in listOf(true, false)) {
+        for (index in 0 until words.size - 2) {
+            val bundle = loadBundle(words[index]) ?: continue
 
-        val read = loadVariantFlag(words[index + 1], bundle)
-        if (read == null && !isForcedFlag(words[index + 1])) {
-            // Not the code that reads the variant flag, unless it is the patch's
-            // own work from an earlier run.
-            continue
+            // The flag load, or the patch's own work from an earlier run.
+            val flag = loadVariantFlag(words[index + 1], bundle, exact)
+                ?: if (isForcedFlag(words[index + 1])) words[index + 1] and REGISTER_MASK
+                else continue
+
+            if (!testsZero(words[index + 2], flag)) continue
+
+            return NativeEdit(
+                label = label,
+                offset = elf.codeOffsetOf(symbol.address + (index + 1) * 4L),
+                replacement = instruction(moveOne(flag)),
+            )
         }
-
-        val flag = read ?: (words[index + 1] and REGISTER_MASK)
-        return NativeEdit(
-            label = label,
-            offset = elf.codeOffsetOf(symbol.address + (index + 1) * 4L),
-            replacement = instruction(moveOne(flag)),
-        )
     }
 
     throw PatchException(
@@ -467,10 +511,13 @@ private fun aarch64AppVariantEdit(elf: Elf64): NativeEdit {
  * ```asm
  * ldr  r4, [r1, #8]      ; the loaded bundle
  * ldrb r0, [r4, #0x2c]   ; its variant flag, replaced by `movs r0, #1`
+ * cbz  r0, ...           ; the test the flag is read for
  * ```
  *
- * The flag load is replaced by a `movs` of the same width, with a `nop` when it
- * was 4 bytes wide, so the instructions around it keep their alignment.
+ * The flag is found the same way as on 64 bit Arm: at 0x2c in every release
+ * seen so far, or wherever the function reads a byte from the bundle and tests
+ * it for zero. The load is replaced by a `movs` of the same width, with a `nop`
+ * when it was 4 bytes wide, so the instructions around it keep their alignment.
  *
  * @throws PatchException If the function no longer reads a variant flag.
  */
@@ -480,19 +527,29 @@ private fun armAppVariantEdit(elf: ElfArm): NativeEdit {
     requireFunction(symbol, label, ARM_VARIANT_FLAG_SIZE)
 
     val instructions = elf.instructions(symbol)
-    for (index in 0 until instructions.size - 1) {
-        val bundle = armLoadBundle(instructions[index]) ?: continue
-        val flag = instructions[index + 1]
+    for (exact in listOf(true, false)) {
+        for (index in 0 until instructions.size - 2) {
+            val bundle = armLoadBundle(instructions[index]) ?: continue
+            val load = instructions[index + 1]
 
-        // Not the code that reads the variant flag, unless it is the patch's own
-        // work from an earlier run.
-        val register = armLoadVariantFlag(flag, bundle) ?: armForcedFlagRegister(flag) ?: continue
+            // The flag load, or the patch's own work from an earlier run.
+            val forced = armForcedFlagRegister(load)
+            val flag = armLoadVariantFlag(load, bundle, exact) ?: forced ?: continue
 
-        return NativeEdit(
-            label = label,
-            offset = elf.codeOffsetOf(flag.address),
-            replacement = armForcedFlag(register, flag.size),
-        )
+            // A 4 byte load is replaced by a `movs` and a `nop`, so on a second
+            // run the test sits one half word further than it did before.
+            val after = instructions.getOrNull(index + 2)
+            val tested = armTestsZero(after, flag) ||
+                (forced != null && isNop(after) &&
+                    armTestsZero(instructions.getOrNull(index + 3), flag))
+            if (!tested) continue
+
+            return NativeEdit(
+                label = label,
+                offset = elf.codeOffsetOf(load.address),
+                replacement = armForcedFlag(flag, load.size),
+            )
+        }
     }
 
     throw PatchException(
@@ -669,12 +726,24 @@ private fun loadBundle(word: Int): Int? {
     return word and REGISTER_MASK
 }
 
-/** `ldrb w?, [x?, #0x58]`, the variant flag of [bundle], or null when [word] is something else. */
-private fun loadVariantFlag(word: Int, bundle: Int): Int? {
+/**
+ * `ldrb w?, [<bundle>, #?]`, a byte of the bundle, or null when [word] is
+ * something else. With [exact], only the byte at the variant flag offset counts;
+ * without it, any byte does, and the caller checks that it is the one the
+ * function tests for zero.
+ */
+private fun loadVariantFlag(word: Int, bundle: Int, exact: Boolean): Int? {
     if ((word and LOAD_STORE_OPCODE_MASK) != LOAD_BYTE) return null
     if (((word ushr 5) and REGISTER_MASK) != bundle) return null
-    if (((word ushr IMMEDIATE_12_SHIFT) and IMMEDIATE_12_MASK) != VARIANT_FLAG) return null
+    if (exact && ((word ushr IMMEDIATE_12_SHIFT) and IMMEDIATE_12_MASK) != VARIANT_FLAG) return null
     return word and REGISTER_MASK
+}
+
+/** `cbz w?, ...` or `cbnz w?, ...`, a test of [register] against zero. */
+private fun testsZero(word: Int, register: Int): Boolean {
+    val opcode = word and BRANCH_IF_ZERO_MASK
+    if (opcode != BRANCH_IF_ZERO && opcode != BRANCH_IF_NONZERO) return false
+    return word and REGISTER_MASK == register
 }
 
 /** `ldr w?, [x0, #?]`, the status word of the receiver, or null when [word] is something else. */
@@ -711,26 +780,43 @@ private fun armLoadBundle(instruction: ElfArm.Instruction): Int? {
     return null
 }
 
-/** `ldrb r?, [<bundle>, #0x2c]`, the variant flag of [bundle], or null when [instruction] is something else. */
-private fun armLoadVariantFlag(instruction: ElfArm.Instruction, bundle: Int): Int? {
+/**
+ * `ldrb r?, [<bundle>, #?]`, a byte of the bundle, or null when [instruction]
+ * is something else. With [exact], only the byte at the variant flag offset
+ * counts; without it, any byte does, and the caller checks that it is the one
+ * the function tests for zero.
+ */
+private fun armLoadVariantFlag(instruction: ElfArm.Instruction, bundle: Int, exact: Boolean): Int? {
     val first = instruction.first
 
     // `ldrb r?, [r?, #imm5]`, the 16 bit encoding, whose offset is in bytes.
     if (instruction.size == 2 && first and ARM_LOAD_STORE_MASK == ARM_LOAD_BYTE16) {
         if (first shr 3 and ARM_LOW_REGISTER_MASK != bundle) return null
-        if (first shr 6 and ARM_OFFSET_5_MASK != ARM_VARIANT_FLAG) return null
+        if (exact && first shr 6 and ARM_OFFSET_5_MASK != ARM_VARIANT_FLAG) return null
         return first and ARM_LOW_REGISTER_MASK
     }
 
     // `ldrb.w r?, [r?, #imm12]`, the 32 bit encoding, whose offset is in bytes too.
     if (instruction.size == 4 && first and ARM_LOAD_WIDE_MASK == ARM_LOAD_BYTE32) {
         if (first and ARM_REGISTER_MASK != bundle) return null
-        if (instruction.second and 0xFFF != ARM_VARIANT_FLAG) return null
+        if (exact && instruction.second and 0xFFF != ARM_VARIANT_FLAG) return null
         return instruction.second shr 12 and ARM_REGISTER_MASK
     }
 
     return null
 }
+
+/** `cbz r?, ...` or `cbnz r?, ...`, a test of [register] against zero. */
+private fun armTestsZero(instruction: ElfArm.Instruction?, register: Int): Boolean {
+    if (instruction == null || instruction.size != 2) return false
+    val opcode = instruction.first and ARM_BRANCH_IF_ZERO_MASK
+    if (opcode != ARM_BRANCH_IF_ZERO && opcode != ARM_BRANCH_IF_NONZERO) return false
+    return instruction.first and ARM_LOW_REGISTER_MASK == register
+}
+
+/** `nop`, the padding the patch writes after a `movs` that replaces a wider load. */
+private fun isNop(instruction: ElfArm.Instruction?): Boolean =
+    instruction != null && instruction.size == 2 && instruction.first == ARM_NOP
 
 /** `ldr r0, [r0, #?]`, the status word of the receiver, or null when [instruction] is something else. */
 private fun armLoadStatusWord(instruction: ElfArm.Instruction): Int? {
