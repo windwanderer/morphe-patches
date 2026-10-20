@@ -1,3 +1,13 @@
+## [1.11.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.10.0...v1.11.0-dev.1) (2026-10-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** find subscription hooks by behavior, not obfuscated names ([4f21316](https://github.com/windwanderer/morphe-patches/commit/4f213164d26bb621f4e33eba1cd3bc13becdfb40))
+
+### ✨ New Features
+
+* **twtapp:** add subscription unlock patch ([1bc5770](https://github.com/windwanderer/morphe-patches/commit/1bc577096838521400541f476c671b725694077a))
+
 ## [1.10.0](https://github.com/windwanderer/morphe-patches/compare/v1.9.0...v1.10.0) (2026-10-20)
 
 ### ✨ New Features
