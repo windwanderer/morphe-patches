@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.9.0-dev.11",
+  "version": "1.9.0-dev.12",
   "patches": [
     {
       "name": "MetService Premium",
@@ -99,7 +99,18 @@
             {
               "version": "1.16.8",
               "versionCodes": {
-                "ARM64_V8A": 11205
+                "ARM64_V8A": 11205,
+                "ARMEABI_V7A": 11205
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.7",
+              "versionCodes": {
+                "ARM64_V8A": 11204,
+                "ARMEABI_V7A": 11204
               },
               "isExperimental": false,
               "minSdk": null,
@@ -109,6 +120,15 @@
               "version": "1.16.5",
               "versionCodes": {
                 "ARMEABI_V7A": 11202
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
+            {
+              "version": "1.16.3",
+              "versionCodes": {
+                "ARM64_V8A": 11200
               },
               "isExperimental": false,
               "minSdk": null,

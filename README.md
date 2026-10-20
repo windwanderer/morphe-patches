@@ -15,7 +15,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.9.0-dev.11](https://github.com/windwanderer/morphe-patches/releases/tag/v1.9.0-dev.11)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
+> **[v1.9.0-dev.12](https://github.com/windwanderer/morphe-patches/releases/tag/v1.9.0-dev.12)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;3 patches total
 <details open>
 <summary>📦 MetService&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
@@ -38,8 +38,8 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 
 **🎯 Supported versions:**
 
-| 1.16.8 | 1.16.5 |
-| :---: | :---: |
+| 1.16.8 | 1.16.7 | 1.16.5 | 1.16.3 |
+| :---: | :---: | :---: | :---: |
 
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|

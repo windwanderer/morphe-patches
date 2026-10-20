@@ -1,3 +1,9 @@
+## [1.9.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.11...v1.9.0-dev.12) (2026-10-20)
+
+### ✨ New Features
+
+* unlock every Stellarium release that was inspected ([fefd42b](https://github.com/windwanderer/morphe-patches/commit/fefd42bf183a9dbe23042898d0b3f0d3cb8c8642))
+
 ## [1.9.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.10...v1.9.0-dev.11) (2026-10-19)
 
 ### 🐛 Bug Fixes
