@@ -80,4 +80,21 @@ object Constants {
             )
         )
     )
+
+    val COMPATIBILITY_TWTApp = Compatibility(
+        name = "Stargazing Hub", // App name as it appears in the Android launcher.
+        packageName = "com.twtapp",
+        apkFileType = ApkFileType.APK, // Shipped as a single APK, arm64-v8a only.
+        appIconColor = 0x0E1B2E, // Icon color in Morphe Manager. Usually the same color as the icon background.
+        targets = listOf(
+            // The unlock patch spoofs RevenueCat's Kotlin bridge (which is not
+            // obfuscated) and the SharedPreferences plugin's boolean readers.
+            // Helpers that a build does not have are skipped, so the release
+            // the patch was developed against is pinned here.
+            AppTarget(
+                version = "3.5.4",
+                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 3050406)
+            )
+        )
+    )
 }
