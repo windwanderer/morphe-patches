@@ -67,8 +67,9 @@ private val logger = Logger.getLogger("StellariumExtendedCatalog")
  *
  * The extension cannot add them itself: an extension is precompiled DEX and its
  * manifest is not merged, so the filters have to be written into the APK's
- * manifest before it is assembled. This is a separate, invisible dependency of
- * [extendedCatalogPatch]; it does nothing on its own.
+ * manifest before it is assembled. This is a separate dependency of
+ * [extendedCatalogPatch], and it is on by default so Simple mode applies the two
+ * together; selecting the catalog alone still pulls it in as a dependency.
  */
 @Suppress("unused")
 val zipSupportPatch = resourcePatch(
