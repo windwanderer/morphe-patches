@@ -144,7 +144,7 @@ internal class ElfArm(private val bytes: ByteArray) : NativeLibrary<ElfArm.Symbo
      * instructions: a half word is only read as the first one of a 32 bit
      * instruction when its own encoding says so.
      */
-    private fun instructionsAt(from: Long, byteCount: Int): List<Instruction> {
+    internal fun instructionsAt(from: Long, byteCount: Int): List<Instruction> {
         val section = codeSectionOf(from)
         val start = section.offset + (from - section.address).toInt()
         val end = minOf(start + byteCount, section.endOffset)
@@ -373,7 +373,7 @@ internal class ElfArm(private val bytes: ByteArray) : NativeLibrary<ElfArm.Symbo
     }
 
     /** The address the call in [instruction] reaches, or null when it is not a `bl` or `blx`. */
-    private fun callTarget(instruction: Instruction): Long? {
+    internal fun callTarget(instruction: Instruction): Long? {
         if (instruction.size != 4) return null
         if (instruction.first and BRANCH32_MASK != BRANCH32_PATTERN) return null
 
@@ -388,10 +388,13 @@ internal class ElfArm(private val bytes: ByteArray) : NativeLibrary<ElfArm.Symbo
      * The address an unconditional `b`, `bl` or `blx` in [instruction] reaches,
      * or null when the instruction is something else.
      */
-    private fun branchTarget(instruction: Instruction): Long? {
+    internal fun branchTarget(instruction: Instruction): Long? {
         if (instruction.size == 2) {
             if (instruction.first and BRANCH16_MASK != BRANCH16_PATTERN) return null
-            return instruction.address + 4 + signExtend(instruction.first and 0x7FF, 11)
+            // The 11 bit immediate is a halfword offset, so it is shifted left
+            // before it is added to the program counter.
+            return instruction.address + 4 +
+                (signExtend(instruction.first and 0x7FF, 11) shl 1)
         }
 
         if (instruction.first and BRANCH32_MASK != BRANCH32_PATTERN) return null
@@ -416,6 +419,22 @@ internal class ElfArm(private val bytes: ByteArray) : NativeLibrary<ElfArm.Symbo
         // The immediate is measured from the program counter, aligned down for
         // these 32 bit instructions.
         return ((instruction.address + 4) and -4L) + immediate
+    }
+
+    /**
+     * Whether [instruction] returns from the function: `bx lr`, `pop {..., pc}`
+     * or `pop.w {..., pc}`. The conditional `popeq` in an `IT` block is the same
+     * 16 bit encoding as an unconditional pop, and is a return on the path the
+     * condition takes.
+     */
+    internal fun isReturn(instruction: Instruction): Boolean {
+        if (instruction.size == 2) {
+            if (instruction.first == 0x4770) return true
+            if (instruction.first and 0xFF00 == 0xBD00) return true
+        } else if (instruction.size == 4) {
+            if (instruction.first == 0xE8BD && instruction.second and 0x8000 != 0) return true
+        }
+        return false
     }
 
     /** [value] read as a signed [bits] bit number. */

@@ -37,8 +37,10 @@ import java.util.logging.Logger
  * The unlock also makes the app ask Play Asset Delivery for the "extended" data
  * pack, the deep catalogs that only a Play install can receive. A sideloaded
  * install never gets an answer, and the failure is shown in the app's data pack
- * error dialog ("Cannot get data pack state"). The patch skips that request as
- * well, because such an install can never receive the pack anyway.
+ * error dialog ("Cannot get data pack state"). The patch branches over that
+ * request, so the dialog stays gone; when the extended catalog patch is applied
+ * and a pack has been imported locally, the Java hook answers the Play lookup
+ * and the pack is registered normally.
  *
  * The patch is written to survive releases it was not built for. Instead of
  * asserting the bytes at each site, it verifies what the functions do, in the
@@ -60,10 +62,10 @@ import java.util.logging.Logger
  * decide what it reports and which features it enables, so leaving one alone
  * would let a patch that reports success still run as the free version. A
  * release that reshapes one of them fails the patch, with a message naming the
- * function that changed. Only the request for the data pack is optional:
- * skipping it leaves the app working, at worst with the data pack dialog back.
- * Nothing is ever patched blindly: a library whose checks no longer match fails
- * instead.
+ * function that changed. The request for the data pack is required too: its
+ * branch is what keeps the data pack dialog from coming back, and the extended
+ * catalog patch builds the local import on top of it. Nothing is ever patched
+ * blindly: a library whose checks no longer match fails instead.
  */
 
 /** A native function the patch rewrites, by mangled name and by plain C++ name. */
@@ -96,8 +98,14 @@ private const val ASSET_PACK = "asset_pack_extended"
 /** Imported functions of the Play Asset Delivery SDK, all under this prefix. */
 private const val PLAY_ASSET_DELIVERY = "AssetPackManager_"
 
+/** The Play import the pack function uses to ask for the pack's download state. */
+private const val PLAY_REQUEST_INFO = "AssetPackManager_requestInfo"
+
 /** How far into the function that registers the pack the pack name and the Play calls sit. */
 private const val PACK_FUNCTION_SIZE = 0x400
+
+/** How many instructions the epilogue search follows before it gives up. */
+private const val MAX_EPILOGUE_STEPS = 24
 
 /**
  * The library holding the license gate. It sits in the split of the ABI the
@@ -252,8 +260,7 @@ val premiumPatch = rawResourcePatch(
  * guessed at.
  *
  * A required edit that no longer matches fails the whole patch, naming the
- * function that changed; the request for the data pack is the only optional
- * one and is reported instead.
+ * function that changed.
  */
 private fun patchNativeLibrary(entry: String, bytes: ByteArray): String {
     if (bytes.size < ELF_HEADER_SIZE || !startsWithElfMagic(bytes)) {
@@ -323,7 +330,7 @@ private fun aarch64Edits(elf: Elf64): List<EditPlan> {
         },
         EditPlan("getAppVariant()", required = true) { aarch64AppVariantEdit(elf) },
         EditPlan("getLicenceStatus()", required = true) { aarch64LicenceStatusEdit(elf) },
-        EditPlan("extended data pack", required = false) { extendedDataPackEdit(elf, instruction(RET)) },
+        EditPlan("extended data pack", required = true) { extendedDataPackEdit(elf) },
     )
 }
 
@@ -341,9 +348,7 @@ private fun armEdits(elf: ElfArm): List<EditPlan> {
         },
         EditPlan("getAppVariant()", required = true) { armAppVariantEdit(elf) },
         EditPlan("getLicenceStatus()", required = true) { armLicenceStatusEdit(elf) },
-        EditPlan("extended data pack", required = false) {
-            extendedDataPackEdit(elf, halfWord(ARM_BX_LR), halfWord(ARM_NOP))
-        },
+        EditPlan("extended data pack", required = true) { extendedDataPackEdit(elf) },
     )
 }
 
@@ -618,39 +623,35 @@ private fun armLicenceStatusEdit(elf: ElfArm): NativeEdit {
 }
 
 /**
- * Stops the app from asking Play Asset Delivery for the extended data pack.
+ * Stops the app from asking Play Asset Delivery for the extended data pack,
+ * while still letting a pack the Java hook answers with be registered.
  *
  * With the Plus unlock in place, `StelAPI::addExtendedSources()` registers the
- * `asset_pack_extended` pack with the engine, which then polls Play for a
- * download state that a sideloaded install can never reach. Every poll fails,
- * and the app shows the failure in its data pack error dialog. The patch makes
- * the function that registration happens in return immediately:
+ * `asset_pack_extended` pack with the engine, which then asks Play for a
+ * download state that a sideloaded install can never reach. Every request
+ * fails, and the app shows the failure in its data pack error dialog. The
+ * patch makes the function that registers the pack skip the `requestInfo` call
+ * and return through its normal epilogue:
  *
  * ```asm
- * sub sp, sp, #0x60    ; the call addExtendedSources() makes to register the
- * ret                  ; pack, replaced by a plain return
+ * bl   AssetPackManager_requestInfo   ; replaced by a branch to the epilogue
+ * cbz  w0, ...                        ; the status check, now skipped
  * ```
  *
- * Nothing exports that function, so it is found by following that call: it is
- * the only one of the calls `addExtendedSources()` makes that both names the
- * pack and reaches Play Asset Delivery. Both places that add the extended
- * sources (the StelAPI constructor and the Plus flag handler) go through it, so
- * the pack is never registered and no request is ever made. The pack itself is
- * only deliverable to a Play install, so nothing that a patched install could
- * have used is lost.
+ * Nothing exports the registration function, so it is found by following the
+ * call `addExtendedSources()` makes: it is the only one of its calls that both
+ * names the pack and reaches Play Asset Delivery. The branch target is the
+ * first branch after the call, once the immediate status check is skipped,
+ * whose target leads to a return. That is the function's epilogue, so the
+ * stack frame the prologue set up is restored and the caller sees a normal
+ * return. When the Java hook does answer with a local pack, the native code
+ * takes the success path and never reaches the patched call.
  *
- * @param returnInstruction the return to write: `ret` on 64 bit Arm, `bx lr` on
- *   32 bit.
- * @param padding written after the return when the instruction it replaces is
- *   wider than it, which keeps the instructions after it aligned.
- * @throws PatchException If the library no longer has that call, which means the
- *   release moved the pack registration somewhere the patch cannot find it.
+ * @throws PatchException If the library no longer calls `requestInfo`, or if the
+ *   function already starts with a return, which is what an older version of
+ *   this patch wrote and cannot be repaired without the original APK.
  */
-private fun <S : NativeLibrary.Symbol> extendedDataPackEdit(
-    elf: NativeLibrary<S>,
-    returnInstruction: ByteArray,
-    padding: ByteArray = ByteArray(0),
-): NativeEdit {
+private fun <S : NativeLibrary.Symbol> extendedDataPackEdit(elf: NativeLibrary<S>): NativeEdit {
     val label = "extended data pack"
     val sources = elf.function(ADD_EXTENDED_SOURCES)
     requireFunction(sources, label, 4)
@@ -683,14 +684,314 @@ private fun <S : NativeLibrary.Symbol> extendedDataPackEdit(
         )
     }
 
-    return NativeEdit(
-        label = label,
-        offset = elf.codeOffsetOf(registrations.single()),
-        replacement = returnInstruction + padding.copyOf(
-            elf.instructionSizeAt(registrations.single()) - returnInstruction.size
-        ),
+    val registration = registrations.single()
+    return when (elf) {
+        is Elf64 -> aarch64ExtendedDataPackEdit(elf, registration)
+        is ElfArm -> armExtendedDataPackEdit(elf, registration)
+        else -> throw PatchException("$label: the library is not 32 or 64 bit Arm")
+    }
+}
+
+/**
+ * The AArch64 form of [extendedDataPackEdit]: skip the `bl` to
+ * `AssetPackManager_requestInfo` and branch to the epilogue the function
+ * already uses after its error logging.
+ */
+private fun aarch64ExtendedDataPackEdit(elf: Elf64, registration: Long): NativeEdit {
+    val label = "extended data pack"
+    val instructions = elf.instructionsAt(registration, PACK_FUNCTION_SIZE)
+    if (instructions.isEmpty()) {
+        throw PatchException("$label: the pack registration function is empty")
+    }
+    if (elf.isReturn(instructions[0].word)) throw oldPackPatchException()
+
+    val requestInfo = elf.pltStubs[PLAY_REQUEST_INFO]
+        ?: throw PatchException("$label: the library does not import \"$PLAY_REQUEST_INFO\"")
+
+    val callIndex = instructions.indexOfFirst { site ->
+        elf.isCall(site.word) && elf.branchTarget(site.address, site.word) == requestInfo
+    }
+    if (callIndex >= 0) {
+        val site = instructions[callIndex]
+        val epilogue = findEpilogueAarch64(elf, instructions, callIndex)
+        return NativeEdit(
+            label = label,
+            offset = elf.codeOffsetOf(site.address),
+            replacement = branch(site.address, epilogue),
+        )
+    }
+
+    // The patch's own work from an earlier run: the branch replaced the call
+    // and is followed by the status check the original code did.
+    for (index in 0 until instructions.size - 1) {
+        val site = instructions[index]
+        if (!elf.isUnconditionalBranch(site.word)) continue
+        val target = elf.branchTarget(site.address, site.word) ?: continue
+        if (!leadsToReturnAarch64(elf, instructions, target)) continue
+        if (!elf.isResultCheck(instructions[index + 1].word)) continue
+        return NativeEdit(
+            label = label,
+            offset = elf.codeOffsetOf(site.address),
+            replacement = instruction(site.word),
+        )
+    }
+
+    throw PatchException(
+        "$label: the pack registration function no longer calls \"$PLAY_REQUEST_INFO\", " +
+            "and it does not contain this patch's earlier branch either"
     )
 }
+
+/**
+ * The epilogue [aarch64ExtendedDataPackEdit] branches to: the first branch
+ * after the Play call, once the immediate status check is skipped, whose target
+ * walks to a `ret`.
+ */
+private fun findEpilogueAarch64(
+    elf: Elf64,
+    instructions: List<Elf64.Instruction>,
+    callIndex: Int,
+): Long {
+    var skippedStatusCheck = false
+    for (index in callIndex + 1 until instructions.size) {
+        val site = instructions[index]
+        if (!skippedStatusCheck && elf.conditionalBranchTarget(site.address, site.word) != null) {
+            skippedStatusCheck = true
+            continue
+        }
+
+        val target = if (elf.isUnconditionalBranch(site.word)) {
+            elf.branchTarget(site.address, site.word)
+        } else {
+            elf.conditionalBranchTarget(site.address, site.word)
+        } ?: continue
+
+        if (leadsToReturnAarch64(elf, instructions, target)) return target
+    }
+
+    throw PatchException(
+        "extended data pack: the pack registration function no longer branches to its " +
+            "epilogue after \"$PLAY_REQUEST_INFO\""
+    )
+}
+
+/** Whether the code at [target] walks to a `ret`, following only plain `b` instructions. */
+private fun leadsToReturnAarch64(
+    elf: Elf64,
+    instructions: List<Elf64.Instruction>,
+    target: Long,
+): Boolean {
+    var index = indexOfAarch64(instructions, target)
+    if (index < 0) return false
+
+    val seen = HashSet<Int>()
+    var steps = 0
+    while (index in instructions.indices && steps < MAX_EPILOGUE_STEPS) {
+        if (!seen.add(index)) return false
+        val site = instructions[index]
+        if (elf.isReturn(site.word)) return true
+        if (elf.isUnconditionalBranch(site.word)) {
+            val next = elf.branchTarget(site.address, site.word) ?: return false
+            index = indexOfAarch64(instructions, next)
+            if (index < 0) return false
+            steps++
+            continue
+        }
+        index++
+        steps++
+    }
+    return false
+}
+
+/** The index of the 4 byte instruction at [address] in [instructions], or -1. */
+private fun indexOfAarch64(instructions: List<Elf64.Instruction>, address: Long): Int {
+    if (instructions.isEmpty()) return -1
+    val index = ((address - instructions.first().address) / 4).toInt()
+    if (index !in instructions.indices) return -1
+    return if (instructions[index].address == address) index else -1
+}
+
+/**
+ * The 32 bit form of [extendedDataPackEdit]. The pack function calls the Arm
+ * PLT stub with `blx`, and its epilogue is the `popeq {..., pc}` the stack
+ * canary check falls into, so the branch is written in the range that reaches
+ * it, with a `nop` filling the call's second half word.
+ */
+private fun armExtendedDataPackEdit(elf: ElfArm, registration: Long): NativeEdit {
+    val label = "extended data pack"
+    val instructions = elf.instructionsAt(registration, PACK_FUNCTION_SIZE)
+    if (instructions.isEmpty()) {
+        throw PatchException("$label: the pack registration function is empty")
+    }
+    if (instructions[0].size == 2 && instructions[0].first == ARM_BX_LR) {
+        throw oldPackPatchException()
+    }
+
+    val requestInfo = elf.pltStubs[PLAY_REQUEST_INFO]
+        ?: throw PatchException("$label: the library does not import \"$PLAY_REQUEST_INFO\"")
+
+    val callIndex = instructions.indexOfFirst { elf.callTarget(it) == requestInfo }
+    if (callIndex >= 0) {
+        val site = instructions[callIndex]
+        val epilogue = findEpilogueArm(elf, instructions, callIndex)
+        return NativeEdit(
+            label = label,
+            offset = elf.codeOffsetOf(site.address),
+            replacement = armBranch(site.address, epilogue),
+        )
+    }
+
+    // The patch's own work from an earlier run: the branch replaced the call
+    // and is followed, after the `nop`, by the status check the original code did.
+    for (index in instructions.indices) {
+        val site = instructions[index]
+        if (elf.callTarget(site) != null) continue
+        val target = elf.branchTarget(site) ?: continue
+        if (!leadsToReturnArm(elf, instructions, target)) continue
+
+        var nextIndex = index + 1
+        if (site.size == 2 && isNop(instructions.getOrNull(nextIndex))) nextIndex++
+        val next = instructions.getOrNull(nextIndex) ?: continue
+        if (!armTestsZero(next, 0)) continue
+
+        val replacement = if (site.size == 2) {
+            val nop = instructions.getOrNull(index + 1)
+            if (!isNop(nop)) continue
+            halfWord(site.first) + halfWord(nop!!.first)
+        } else {
+            halfWord(site.first) + halfWord(site.second)
+        }
+        return NativeEdit(
+            label = label,
+            offset = elf.codeOffsetOf(site.address),
+            replacement = replacement,
+        )
+    }
+
+    throw PatchException(
+        "$label: the pack registration function no longer calls \"$PLAY_REQUEST_INFO\", " +
+            "and it does not contain this patch's earlier branch either"
+    )
+}
+
+/** The epilogue [armExtendedDataPackEdit] branches to, found the same way as on AArch64. */
+private fun findEpilogueArm(
+    elf: ElfArm,
+    instructions: List<ElfArm.Instruction>,
+    callIndex: Int,
+): Long {
+    var skippedStatusCheck = false
+    for (index in callIndex + 1 until instructions.size) {
+        val site = instructions[index]
+        if (!skippedStatusCheck && isArmConditionalBranch(site)) {
+            skippedStatusCheck = true
+            continue
+        }
+        if (elf.callTarget(site) != null) continue
+
+        val target = elf.branchTarget(site) ?: continue
+        if (leadsToReturnArm(elf, instructions, target)) return target
+    }
+
+    throw PatchException(
+        "extended data pack: the pack registration function no longer branches to its " +
+            "epilogue after \"$PLAY_REQUEST_INFO\""
+    )
+}
+
+/** Whether the code at [target] walks to a return, following only plain `b` instructions. */
+private fun leadsToReturnArm(
+    elf: ElfArm,
+    instructions: List<ElfArm.Instruction>,
+    target: Long,
+): Boolean {
+    var index = instructions.indexOfFirst { it.address == target }
+    if (index < 0) return false
+
+    val seen = HashSet<Int>()
+    var steps = 0
+    while (index in instructions.indices && steps < MAX_EPILOGUE_STEPS) {
+        if (!seen.add(index)) return false
+        val site = instructions[index]
+        if (elf.isReturn(site)) return true
+        if (elf.callTarget(site) == null) {
+            val next = elf.branchTarget(site)
+            if (next != null) {
+                index = instructions.indexOfFirst { it.address == next }
+                if (index < 0) return false
+                steps++
+                continue
+            }
+        }
+        index++
+        steps++
+    }
+    return false
+}
+
+/** Whether [site] is a conditional Thumb branch, which is how the Play status is checked. */
+private fun isArmConditionalBranch(site: ElfArm.Instruction): Boolean {
+    if (site.size == 2) {
+        val first = site.first
+        // `b<c>`, but not the `udf`/`svc` encodings that share the 0xD prefix.
+        if (first and 0xF000 == 0xD000 && first and 0x0F00 != 0x0F00) return true
+        if (first and ARM_BRANCH_IF_ZERO_MASK == ARM_BRANCH_IF_ZERO) return true
+        if (first and ARM_BRANCH_IF_ZERO_MASK == ARM_BRANCH_IF_NONZERO) return true
+        return false
+    }
+
+    // `b<c>.w`, which keeps an "always" encoding that is the plain `b.w`.
+    val first = site.first
+    val second = site.second
+    return first and 0xF800 == 0xF000 &&
+        second and 0xC000 == 0x8000 &&
+        second and 0x1000 == 0 &&
+        first shr 6 and 0xF != 0xE
+}
+
+/**
+ * Encodes a branch from [from] to [to] in Thumb. A 16 bit `b` is used when it
+ * reaches, with a `nop` filling the rest of the 32 bit call it replaces;
+ * otherwise a `b.w` is written.
+ */
+private fun armBranch(from: Long, to: Long): ByteArray {
+    val delta = to - (from + 4)
+    if (delta % 2 != 0L) {
+        throw PatchException(
+            "Cannot branch from 0x${from.toString(16)} to 0x${to.toString(16)}: the target is not half word aligned"
+        )
+    }
+    if (delta >= -2048 && delta <= 2046) {
+        return halfWord(0xE000 or ((delta shr 1).toInt() and 0x7FF)) + halfWord(ARM_NOP)
+    }
+
+    // `b.w` measures from the aligned program counter, and its 25 bit immediate
+    // is split into a sign, two inversion bits and two halves, as the `blx`
+    // encoder above does for a call.
+    val value = to - ((from + 4) and -4L)
+    if (value < -(1L shl 24) || value >= (1L shl 24) || value % 2 != 0L) {
+        throw PatchException(
+            "Cannot branch from 0x${from.toString(16)} to 0x${to.toString(16)}, it is too far away"
+        )
+    }
+
+    val bits = value.toInt() and 0x01FFFFFF
+    val sign = bits shr 24 and 1
+    val first = 0xF000 or (sign shl 10) or (bits shr 12 and 0x3FF)
+    val second = 0x9000 or
+        ((sign xor (bits shr 23 and 1) xor 1) shl 13) or
+        ((sign xor (bits shr 22 and 1) xor 1) shl 11) or
+        (bits shr 1 and 0x7FF)
+
+    return halfWord(first) + halfWord(second)
+}
+
+/** The message for an APK that the previous, entry-return form of this edit was applied to. */
+private fun oldPackPatchException(): PatchException = PatchException(
+    "extended data pack: the pack registration function already returns at its first " +
+        "instruction. That is what an older version of this patch wrote; patch the original " +
+        "APK again."
+)
 
 /**
  * The function [function] names: the exact mangled symbol, or the only symbol

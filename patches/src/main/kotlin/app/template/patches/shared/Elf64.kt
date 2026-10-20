@@ -41,6 +41,12 @@ internal class Elf64(private val bytes: ByteArray) : NativeLibrary<Elf64.Symbol>
         override val isFunction: Boolean get() = type == TYPE_FUNCTION || type == TYPE_INDIRECT_FUNCTION
     }
 
+    /** One AArch64 instruction, at the virtual address it is mapped to. */
+    internal class Instruction(
+        val address: Long,
+        val word: Int,
+    )
+
     private class Section(
         var name: String,
         val type: Long,
@@ -131,6 +137,89 @@ internal class Elf64(private val bytes: ByteArray) : NativeLibrary<Elf64.Symbol>
             maxWords
         }
         return IntArray(words) { u32(offset + it * 4).toInt() }
+    }
+
+    /**
+     * The instructions the code starting at the address [from] is made of,
+     * looking at most [byteCount] bytes ahead and never past the end of the
+     * executable section.
+     *
+     * This is how a patch follows a function that has no symbol size, such as
+     * the anonymous function that registers the extended data pack.
+     */
+    internal fun instructionsAt(from: Long, byteCount: Int): List<Instruction> {
+        val section = codeSectionOf(from)
+        val start = section.offset + (from - section.address).toInt()
+        val end = minOf(start + byteCount, section.endOffset)
+
+        val result = ArrayList<Instruction>()
+        var offset = start
+        while (offset + 4 <= end) {
+            result += Instruction(section.address + (offset - section.offset), u32(offset).toInt())
+            offset += 4
+        }
+        return result
+    }
+
+    /** The target of the `b` or `bl` instruction [word] placed at [at], or null when it is neither. */
+    internal fun branchTarget(at: Long, word: Int): Long? {
+        val opcode = word and BRANCH_MASK
+        if (opcode != BRANCH && opcode != BRANCH_LINK) return null
+        return at + branchDisplacement(word) * 4L
+    }
+
+    /**
+     * The target of a conditional AArch64 branch, or null when [word] is not
+     * one. This covers `b.<cond>`, `cbz`/`cbnz` and `tbz`/`tbnz`, including the
+     * stack canary test the data pack function ends through.
+     */
+    internal fun conditionalBranchTarget(at: Long, word: Int): Long? {
+        // `b.<cond>`: a 19 bit signed word offset, with a condition that is not
+        // always (the always form is the plain `b` above).
+        if (word and 0xFF000010.toInt() == 0x54000000) {
+            return at + signExtend((word ushr 5) and 0x7FFFF, 19) * 4L
+        }
+
+        val opcode = word and 0x7F000000
+        // `cbz`/`cbnz`: the same 19 bit signed word offset.
+        if (opcode == 0x34000000 || opcode == 0x35000000) {
+            return at + signExtend((word ushr 5) and 0x7FFFF, 19) * 4L
+        }
+        // `tbz`/`tbnz`: a 14 bit signed word offset whose top bit is bit 31.
+        if (opcode == 0x36000000 || opcode == 0x37000000) {
+            val immediate = ((word ushr 31) shl 14) or ((word ushr 5) and 0x3FFF)
+            return at + signExtend(immediate, 15) * 4L
+        }
+        return null
+    }
+
+    /** Whether [word] is an unconditional `b`. */
+    internal fun isUnconditionalBranch(word: Int): Boolean = word and BRANCH_MASK == BRANCH
+
+    /** Whether [word] is a `bl`. */
+    internal fun isCall(word: Int): Boolean = word and BRANCH_MASK == BRANCH_LINK
+
+    /** Whether [word] is a `ret` (including `ret xN`). */
+    internal fun isReturn(word: Int): Boolean = word and 0xFFFFFC1F.toInt() == 0xD65F0000.toInt()
+
+    /**
+     * Whether [word] is a branch that tests the 32 bit register `w0`, which is
+     * how the pack function checks the status the Play call returned.
+     */
+    internal fun isResultCheck(word: Int): Boolean {
+        val opcode = word and 0x7F000000
+        if (opcode != 0x34000000 && opcode != 0x35000000 &&
+            opcode != 0x36000000 && opcode != 0x37000000
+        ) {
+            return false
+        }
+        return word and REGISTER_MASK == 0
+    }
+
+    /** [value] read as a signed [bits] bit number. */
+    private fun signExtend(value: Int, bits: Int): Int {
+        val sign = 1 shl (bits - 1)
+        return if (value and sign != 0) value - (sign shl 1) else value
     }
 
     /**
