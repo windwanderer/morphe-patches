@@ -1,26 +1,14 @@
-## [1.9.0](https://github.com/windwanderer/morphe-patches/compare/v1.8.0...v1.9.0) (2026-10-20)
-
-### 🐛 Bug Fixes
-
-* appIconColor value ([546c3b9](https://github.com/windwanderer/morphe-patches/commit/546c3b9b55d742984563502de7c5c556efe6bb7f))
-* apply Stellarium's ZIP catalog support by default ([2302083](https://github.com/windwanderer/morphe-patches/commit/23020839e0395b2416ff4046049bfeef155606eb))
-* branch Stellarium's pack hook to the original return ([27519e0](https://github.com/windwanderer/morphe-patches/commit/27519e005270f2ada40e9fc4a1d0f9aa58438a37))
-* keep the Stellarium unlock from silently patching half the checks ([d85ebcd](https://github.com/windwanderer/morphe-patches/commit/d85ebcd4dade09800bc6f749c44138db06d67fd9))
-* list only the 1.16.8 target for the Stellarium patch again ([5328352](https://github.com/windwanderer/morphe-patches/commit/53283528ba512b4a31feefbeec9309e2eb219de4))
-* log the entry, hash and edit offsets of the Stellarium patch ([48bc77e](https://github.com/windwanderer/morphe-patches/commit/48bc77e5dfbe5af292da32984e4ed031e314b23b))
-* return the 32 bit license checks to their caller ([78e920f](https://github.com/windwanderer/morphe-patches/commit/78e920ff3f7915e9b8a0fc3e3a457fdc783a60e7))
+## [1.10.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.9.0...v1.10.0-dev.1) (2026-10-20)
 
 ### ✨ New Features
 
-*  Stellarium patch ([d31d08e](https://github.com/windwanderer/morphe-patches/commit/d31d08e12b9a49d140070a4177f6b46c5527142e))
-* add Stellarium patch ([7a24ea5](https://github.com/windwanderer/morphe-patches/commit/7a24ea570eb324cc61498ddaae2a6f5ea7be76bd))
-* import Stellarium extended catalogs from a local ZIP ([43d025c](https://github.com/windwanderer/morphe-patches/commit/43d025c99683433c90a7b2f30b1c140bf5511f24))
-* skip the Play data pack request in the Stellarium Premium patch ([6a33c21](https://github.com/windwanderer/morphe-patches/commit/6a33c21963a1e72539fc5fedd571e406ab0c3456))
-* unlock every Stellarium release that was inspected ([fefd42b](https://github.com/windwanderer/morphe-patches/commit/fefd42bf183a9dbe23042898d0b3f0d3cb8c8642))
-* unlock Stellarium Plus on 32 bit devices too ([3c19423](https://github.com/windwanderer/morphe-patches/commit/3c1942361fe94e58f7c6547f57b933283d40f817)), closes [#1](https://github.com/windwanderer/morphe-patches/issues/1)
-* unlock Stellarium Plus with a native patch ([ba7b2c7](https://github.com/windwanderer/morphe-patches/commit/ba7b2c74140fc57c5ff4112553ab1f56ebc2eb55))
-* update Stellarium patch ([caf3798](https://github.com/windwanderer/morphe-patches/commit/caf3798a26f891cd0c94640d8b900d91981248fb))
-* update Stellarium patch ([c2a66b8](https://github.com/windwanderer/morphe-patches/commit/c2a66b8abb55011ddf2c4de3ec03836271e92336))
+* update metservice support ([77f7224](https://github.com/windwanderer/morphe-patches/commit/77f7224fd124a8291a56a9a114dc16a762e75632))
+
+## [1.9.0-dev.16](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.15...v1.9.0-dev.16) (2026-10-20)
+
+### ✨ New Features
+
+* update metservice support ([77f7224](https://github.com/windwanderer/morphe-patches/commit/77f7224fd124a8291a56a9a114dc16a762e75632))
 
 ## [1.9.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.14...v1.9.0-dev.15) (2026-10-20)
 
