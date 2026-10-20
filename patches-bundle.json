@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-20T05:00:08",
-  "description": "## [1.9.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.12...v1.9.0-dev.13) (2026-10-20)\n\n### ✨ New Features\n\n* import Stellarium extended catalogs from a local ZIP ([43d025c](https://github.com/windwanderer/morphe-patches/commit/43d025c99683433c90a7b2f30b1c140bf5511f24))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.13/patches-1.9.0-dev.13.mpp",
+  "created_at": "2026-10-20T05:28:43",
+  "description": "## [1.9.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.13...v1.9.0-dev.14) (2026-10-20)\n\n### 🐛 Bug Fixes\n\n* branch Stellarium's pack hook to the original return ([27519e0](https://github.com/windwanderer/morphe-patches/commit/27519e005270f2ada40e9fc4a1d0f9aa58438a37))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.14/patches-1.9.0-dev.14.mpp",
   "signature_download_url": "",
-  "version": "1.9.0-dev.13"
+  "version": "1.9.0-dev.14"
 }

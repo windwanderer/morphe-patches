@@ -1,3 +1,9 @@
+## [1.9.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.13...v1.9.0-dev.14) (2026-10-20)
+
+### 🐛 Bug Fixes
+
+* branch Stellarium's pack hook to the original return ([27519e0](https://github.com/windwanderer/morphe-patches/commit/27519e005270f2ada40e9fc4a1d0f9aa58438a37))
+
 ## [1.9.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.12...v1.9.0-dev.13) (2026-10-20)
 
 ### ✨ New Features
