@@ -1,3 +1,9 @@
+## [1.9.0-dev.16](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.15...v1.9.0-dev.16) (2026-10-20)
+
+### ✨ New Features
+
+* update metservice support ([77f7224](https://github.com/windwanderer/morphe-patches/commit/77f7224fd124a8291a56a9a114dc16a762e75632))
+
 ## [1.9.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.14...v1.9.0-dev.15) (2026-10-20)
 
 ### 🐛 Bug Fixes
