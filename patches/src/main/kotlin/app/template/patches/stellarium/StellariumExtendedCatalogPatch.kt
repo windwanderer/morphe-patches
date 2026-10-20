@@ -1,14 +1,15 @@
 package app.template.patches.stellarium
 
 import app.morphe.patcher.extensions.InstructionExtensions.addInstructions
+import app.morphe.patcher.extensions.InstructionExtensions.addInstructionsWithLabels
 import app.morphe.patcher.patch.BytecodePatchContext
 import app.morphe.patcher.patch.PatchException
 import app.morphe.patcher.patch.bytecodePatch
 import app.morphe.patcher.patch.resourcePatch
+import app.morphe.patcher.util.smali.ExternalLabel
 import app.template.patches.shared.Constants.COMPATIBILITY_Stellarium
 import com.android.tools.smali.dexlib2.Opcode
 import com.android.tools.smali.dexlib2.iface.ClassDef
-import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import org.w3c.dom.Document
@@ -226,8 +227,7 @@ private fun BytecodePatchContext.hookPackLocation(managerClass: ClassDef, locati
 
     // Re-read the instructions because the entry hook moved every return site.
     val returns = implementation.instructions.mapIndexedNotNull { index, instruction ->
-        if (instruction.opcode != Opcode.RETURN_OBJECT) null
-        else index to (instruction as OneRegisterInstruction).registerA
+        if (instruction.opcode == Opcode.RETURN_OBJECT) index else null
     }
     if (returns.size != 3) {
         throw PatchException(
@@ -242,22 +242,23 @@ private fun BytecodePatchContext.hookPackLocation(managerClass: ClassDef, locati
         .replace('/', '.')
 
     // Highest index first, so the lower return sites do not move while the
-    // blocks are inserted.
-    for ((site, register) in returns.sortedByDescending { it.first }) {
+    // blocks are inserted. The branch target is the original return itself;
+    // addInstructionsWithLabels keeps that label pointing at it after the
+    // instructions are inserted.
+    for (site in returns.sortedDescending()) {
+        val originalReturn = implementation.instructions[site]
         val original = "pack_original_$site"
-        method.addInstructions(
+        method.addInstructionsWithLabels(
             site,
             """
-                move-object v0, v$register
                 const-string v1, "$locationName"
                 invoke-static {v1}, $ASSET_SHIM->getPackLocation(Ljava/lang/String;)Ljava/lang/Object;
                 move-result-object v2
                 if-eqz v2, :$original
                 check-cast v2, $ASSET_PACK_LOCATION
                 return-object v2
-                :$original
-                return-object v0
             """,
+            ExternalLabel(original, originalReturn),
         )
     }
 
