@@ -1,3 +1,9 @@
+## [1.9.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.14...v1.9.0-dev.15) (2026-10-20)
+
+### 🐛 Bug Fixes
+
+* apply Stellarium's ZIP catalog support by default ([2302083](https://github.com/windwanderer/morphe-patches/commit/23020839e0395b2416ff4046049bfeef155606eb))
+
 ## [1.9.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.13...v1.9.0-dev.14) (2026-10-20)
 
 ### 🐛 Bug Fixes

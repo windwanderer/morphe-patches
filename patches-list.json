@@ -1,6 +1,6 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.9.0-dev.14",
+  "version": "1.9.0-dev.15",
   "patches": [
     {
       "name": "MetService Premium",
@@ -84,8 +84,8 @@
     },
     {
       "name": "Stellarium Extended Catalog",
-      "description": "Import a locally downloaded extended catalog ZIP instead of waiting for a Play Asset Delivery download that a sideloaded install can never receive. Nothing is downloaded and nothing is requested at launch; without a ZIP the app is unchanged.",
-      "default": false,
+      "description": "Import a locally downloaded extended catalog ZIP instead of waiting for a Play Asset Delivery download that a sideloaded install can never receive. Nothing is downloaded and nothing is requested at launch; without a ZIP the app is unchanged. Enabled by default; turn it off in Expert mode if you do not want the ZIP entry.",
+      "default": true,
       "category": null,
       "compatiblePackages": [
         {
@@ -142,7 +142,7 @@
     {
       "name": "Stellarium Extended Catalog (ZIP support)",
       "description": "Adds the \"open with\" and share-sheet entries that let Stellarium receive a locally downloaded extended catalog ZIP. Used by Stellarium Extended Catalog.",
-      "default": false,
+      "default": true,
       "category": null,
       "compatiblePackages": [
         {

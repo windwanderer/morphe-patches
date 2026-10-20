@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-20T05:28:43",
-  "description": "## [1.9.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.13...v1.9.0-dev.14) (2026-10-20)\n\n### 🐛 Bug Fixes\n\n* branch Stellarium's pack hook to the original return ([27519e0](https://github.com/windwanderer/morphe-patches/commit/27519e005270f2ada40e9fc4a1d0f9aa58438a37))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.14/patches-1.9.0-dev.14.mpp",
+  "created_at": "2026-10-20T06:30:36",
+  "description": "## [1.9.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.9.0-dev.14...v1.9.0-dev.15) (2026-10-20)\n\n### 🐛 Bug Fixes\n\n* apply Stellarium's ZIP catalog support by default ([2302083](https://github.com/windwanderer/morphe-patches/commit/23020839e0395b2416ff4046049bfeef155606eb))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.9.0-dev.15/patches-1.9.0-dev.15.mpp",
   "signature_download_url": "",
-  "version": "1.9.0-dev.14"
+  "version": "1.9.0-dev.15"
 }
