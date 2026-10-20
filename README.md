@@ -15,7 +15,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.10.0](https://github.com/windwanderer/morphe-patches/releases/tag/v1.10.0)**&nbsp;&nbsp;•&nbsp;&nbsp;`main`&nbsp;&nbsp;•&nbsp;&nbsp;5 patches total
+> **[v1.11.0-dev.1](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.1)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
 <details open>
 <summary>📦 MetService&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
@@ -46,6 +46,21 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 | [Stellarium Extended Catalog](#stellarium-extended-catalog) | Import a locally downloaded extended catalog ZIP instead of waiting for a Play Asset Delivery download that a sideloaded install can never receive. Nothing is downloaded and nothing is requested at launch; without a ZIP the app is unchanged. Enabled by default; turn it off in Expert mode if you do not want the ZIP entry. |  |
 | [Stellarium Extended Catalog (ZIP support)](#stellarium-extended-catalog-zip-support) | Adds the "open with" and share-sheet entries that let Stellarium receive a locally downloaded extended catalog ZIP. Used by Stellarium Extended Catalog. |  |
 | [Stellarium Premium](#stellarium-premium) | Unlock Stellarium Plus by patching the native license checks, and skip the Play data pack request a sideloaded install cannot satisfy (arm64-v8a and armeabi-v7a). |  |
+
+</details>
+
+<details open>
+<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 3.5.4 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Unlock Subscription](#unlock-subscription) | Unlocks all subscription features in TWT App. |  |
 
 </details>
 
