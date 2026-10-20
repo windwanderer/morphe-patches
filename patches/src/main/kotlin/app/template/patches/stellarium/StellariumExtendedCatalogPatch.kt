@@ -75,7 +75,10 @@ val zipSupportPatch = resourcePatch(
     name = "Stellarium Extended Catalog (ZIP support)",
     description = "Adds the \"open with\" and share-sheet entries that let Stellarium receive a " +
         "locally downloaded extended catalog ZIP. Used by Stellarium Extended Catalog.",
-    default = false,
+    // On by default: the manager only offers default patches in Simple mode, and the
+    // catalog patch is useless without these manifest entries. It is still a normal
+    // patch in Expert mode, where it can be deselected.
+    default = true,
 ) {
     compatibleWith(COMPATIBILITY_Stellarium)
     execute {
@@ -113,8 +116,11 @@ val extendedCatalogPatch = bytecodePatch(
     name = "Stellarium Extended Catalog",
     description = "Import a locally downloaded extended catalog ZIP instead of waiting for a Play " +
         "Asset Delivery download that a sideloaded install can never receive. Nothing is " +
-        "downloaded and nothing is requested at launch; without a ZIP the app is unchanged.",
-    default = false,
+        "downloaded and nothing is requested at launch; without a ZIP the app is unchanged. " +
+        "Enabled by default; turn it off in Expert mode if you do not want the ZIP entry.",
+    // On by default so Simple mode applies it together with the premium unlock. Without a
+    // ZIP the hooks return the original values and the app behaves exactly as before.
+    default = true,
 ) {
     compatibleWith(COMPATIBILITY_Stellarium)
     dependsOn(premiumPatch, zipSupportPatch)
