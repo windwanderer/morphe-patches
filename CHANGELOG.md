@@ -1,3 +1,9 @@
+## [1.11.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.4...v1.11.0-dev.5) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** robust behavioral check for splash intercept + debug log ([e181dde](https://github.com/windwanderer/morphe-patches/commit/e181dde340ef29e4a72748bc1a8f2144e2ca0c59))
+
 ## [1.11.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.3...v1.11.0-dev.4) (2026-11-20)
 
 ### 🐛 Bug Fixes

@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-20T10:23:30",
-  "description": "## [1.11.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.3...v1.11.0-dev.4) (2026-11-20)\n\n### 🐛 Bug Fixes\n\n* **twtapp:** behavioral check + smali forms for splash intercept ([4cbc148](https://github.com/windwanderer/morphe-patches/commit/4cbc14841b1770a45096f6b9e2fdba762cd1760f))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.4/patches-1.11.0-dev.4.mpp",
+  "created_at": "2026-11-20T10:45:01",
+  "description": "## [1.11.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.4...v1.11.0-dev.5) (2026-11-20)\n\n### 🐛 Bug Fixes\n\n* **twtapp:** robust behavioral check for splash intercept + debug log ([e181dde](https://github.com/windwanderer/morphe-patches/commit/e181dde340ef29e4a72748bc1a8f2144e2ca0c59))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.5/patches-1.11.0-dev.5.mpp",
   "signature_download_url": "",
-  "version": "1.11.0-dev.4"
+  "version": "1.11.0-dev.5"
 }
