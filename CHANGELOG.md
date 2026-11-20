@@ -1,3 +1,10 @@
+## [1.11.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.2...v1.11.0-dev.3) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** 3.7.0-only, forge membership snapshot, intercept splash ad ([a21d6ad](https://github.com/windwanderer/morphe-patches/commit/a21d6ad94acd0306b4b087bb902207410795fab7))
+* **twtapp:** fix patchInjectSnapshotIntoMap signature for c.s() call ([dd8df74](https://github.com/windwanderer/morphe-patches/commit/dd8df74c22bf535bd92b64608c7fa31657c61ed8))
+
 ## [1.11.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.1...v1.11.0-dev.2) (2026-11-20)
 
 ### 🐛 Bug Fixes
