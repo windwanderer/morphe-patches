@@ -271,21 +271,6 @@ private fun splashAdInterceptHook(method: Method): String? {
     // field and call the Result's `success`, otherwise there is nothing to
     // intercept — e.g. the method might have been renamed or restructured.
     val instructions = method.implementation?.instructions ?: return null
-    runCatching {
-        val dump = StringBuilder()
-        for (ins in instructions) {
-            val c = ins::class.java
-            val op = runCatching { c.declaredMethods.firstOrNull { it.name == "getOpcode" }?.invoke(ins)?.toString() }.getOrNull()
-            val units = runCatching {
-                c.declaredMethods.firstOrNull { it.name == "getCodeUnits" }
-                    ?.invoke(ins)?.let { it as? Iterable<*> }?.joinToString(",")
-            }.getOrNull()
-            val ref = (ins as? ReferenceInstruction)?.reference
-            dump.appendLine("INS op=$op units=[$units] ref=$ref")
-        }
-        logger.info("onMethodCall dump:\n$dump")
-    }
-    logger.info("splash: static=${method.isStatic()} ps=${method.parameterStart()} mcr=v$methodCallRegister rr=v$resultRegister rc=${method.implementation?.registerCount} params=${method.parameters}")
     var readsMethodName = false
     var callsSuccess = false
     for (ins in instructions) {
