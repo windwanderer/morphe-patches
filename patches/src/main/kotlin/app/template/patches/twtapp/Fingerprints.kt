@@ -46,15 +46,3 @@ val MembershipSnapshotReadAllFingerprint = Fingerprint(
     returnType = "Ljava/util/HashMap;"
 )
 
-/**
- * The Gromore plugin's MethodChannel handler — the obfuscated `Lxi/d`
- * serving `flutter_gromore_ads`. Its `onMethodCall` handles the
- * `showSplashAd` channel call that makes the app show the splash page ad
- * on open.
- */
-val SplashAdPluginFingerprint = Fingerprint(
-    definingClass = "Lxi/d;",
-    name = "onMethodCall",
-    parameters = listOf("Lyj/n;", "Lyj/p;"),
-    returnType = "V"
-)

@@ -14,7 +14,6 @@ import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
-import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import java.util.logging.Logger
 
@@ -34,9 +33,6 @@ private const val MEMBERSHIP_SNAPSHOT_KEY = "mainland_commerce_membership_snapsh
 
 /** The legacy backends key their entries with a "flutter." prefix. */
 private const val PREFIXED_MEMBERSHIP_SNAPSHOT_KEY = "flutter.$MEMBERSHIP_SNAPSHOT_KEY"
-
-/** The channel method the app calls to show the splash page ad. */
-private const val SPLASH_AD_CHANNEL_METHOD = "showSplashAd"
 
 private val logger = Logger.getLogger("TwtAppUnlock")
 
@@ -147,21 +143,6 @@ val twtAppUnlockSubscriptionPatch = bytecodePatch(
             }
         }
 
-        // ── Layer 4: the splash page ad on app open ─────────────────────
-        // The app calls the plugin with the method name "showSplashAd"; the
-        // intercept calls the plugin's result immediately, so the splash
-        // page ad never shows.
-        runCatching {
-            SplashAdPluginFingerprint.method
-        }.getOrNull()?.let { method ->
-            val smali = splashAdInterceptHook(method)
-            if (smali != null) {
-                method.addInstructions(0, smali)
-                hooks++
-                logger.info("Intercepted splash ad in ${method.definingClass}->${method.name}")
-            }
-        }
-
         if (hooks == 0) {
             throw PatchException(
                 "None of the subscription checks could be found. " +
@@ -249,51 +230,6 @@ private fun BytecodePatchContext.patchInjectSnapshotIntoMap(method: MutableMetho
         """.trimIndent()
     )
     return true
-}
-
-// ── Layer 4: the splash page ad intercept ──────────────────────────────────
-
-/**
- * Smali that intercepts the Gromore plugin's `showSplashAd` channel call:
- * when the app calls the plugin with the method name "showSplashAd", the
- * intercept calls `Result.success(null)` right away, so the app proceeds and
- * the splash page ad never shows.
- *
- * The register layout follows the smali convention: for an instance method
- * the parameter registers start after the receiver, the MethodCall is the
- * next one and the Result is the last one.
- */
-private fun splashAdInterceptHook(method: Method): String? {
-    val methodCallRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
-    val resultRegister = method.parameterStart() + if (method.isStatic()) 1 else 2
-
-    // Behavioral check: the handler must read the MethodCall's method-name
-    // field and call the Result's `success`, otherwise there is nothing to
-    // intercept — e.g. the method might have been renamed or restructured.
-    val instructions = method.implementation?.instructions ?: return null
-    var readsMethodName = false
-    var callsSuccess = false
-    for (ins in instructions) {
-        when (val reference = (ins as? ReferenceInstruction)?.reference) {
-            is FieldReference ->
-                if (reference.definingClass.contains("Ly") && reference.name == "a") readsMethodName = true
-            is MethodReference ->
-                if (reference.definingClass.contains("Lfi") && reference.name == "success") callsSuccess = true
-        }
-    }
-    logger.info("splashAdInterceptHook: readsMethodName=$readsMethodName callsSuccess=$callsSuccess")
-    if (!readsMethodName || !callsSuccess) return null
-
-    return """
-        iget-object v2, v$methodCallRegister, Lyj/n;->a:Ljava/lang/String;
-        const-string v3, "$SPLASH_AD_CHANNEL_METHOD"
-        invoke-virtual {v3, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-        move-result v3
-        if-eqz v3, :original
-        invoke-virtual {v2, v17}, Lfi/a;->success(Ljava/lang/Object;)V
-        return-void
-        :original
-    """.trimIndent()
 }
 
 // ── Layer 2: the shared_preferences backends ────────────────────────────────
@@ -386,9 +322,9 @@ private fun Method.calls(owner: String, name: String): Boolean =
         reference != null && reference.definingClass == owner && reference.name == name
     } == true
 
-private fun Method.isStatic(): Boolean = AccessFlags.STATIC.isSet(accessFlags)
+internal fun Method.isStatic(): Boolean = AccessFlags.STATIC.isSet(accessFlags)
 
-private fun Method.parameterStart(): Int =
+internal fun Method.parameterStart(): Int =
     implementation!!.registerCount - parameterRegisterCount()
 
 private fun Method.localRegisterCount(): Int =
