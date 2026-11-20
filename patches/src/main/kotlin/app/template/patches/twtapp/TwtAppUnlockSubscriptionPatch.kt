@@ -50,9 +50,99 @@ import java.util.logging.Logger
  * A build that does not contain one of the layers skips it instead of failing
  * the whole patch; if no layer at all can be found the patch fails, so a
  * release it no longer understands is never silently left unpatched.
+ *
+ * 4. The FlutterSecureStorage plugin. Since 3.7.0 the app keeps its
+ *    membership snapshot in the secure storage and gates premium features on
+ *    a valid snapshot rather than on the legacy boolean keys alone. The
+ *    plugin's write primitive (`c.x(String, String)`) stores the app's value,
+ *    and its read primitive (`c.b(String)`) decrypts it; both are hooked when
+ *    the storage key asks for `mainland_commerce_membership_snapshot_v1`: the
+ *    write stores the forged snapshot, and the read returns it, so the
+ *    app's local validation passes either way.
+ * 5. The shared_preferences backends. The app reads the snapshot there too:
+ *    the map readers are seeded with the same forged snapshot string, so a
+ *    backend that hands it out through `readAll()` carries it as well.
  */
 
 private const val SUBSCRIPTION_KEY = "is_subscribed"
+
+/**
+ * The storage key the app uses in the secure storage for the membership
+ * snapshot since 3.7.0.
+ */
+private const val MEMBERSHIP_SNAPSHOT_KEY = "mainland_commerce_membership_snapshot_v1"
+
+/**
+ * The forged membership snapshot. The app validates a read snapshot before it
+ * grants premium features ("Invalid membership snapshot", "Invalid membership
+ * snapshot timestamp", "Invalid membership entitlement"), so the forged value
+ * has to be shaped like a real one: the entitlement is "premium", the
+ * membership is paid and active, the timestamps parse as the verification
+ * time and a far-future expiry.
+ */
+private fun membershipSnapshotJson(): String {
+    val verifiedAt = System.currentTimeMillis()
+    return "{\"productId\":\"premium\",\"premium\":true,\"entitlement\":\"premium\"," +
+        "\"isPaid\":true,\"isActive\":true,\"active\":true,\"status\":\"ACTIVE\"," +
+        "\"source\":\"web\",\"expiresAt\":4102444800000,\"expiry\":4102444800000," +
+        "\"verifiedAt\":$verifiedAt}"
+}
+
+/**
+ * Smali that intercepts the secure-storage read: when the value is null,
+ * empty, or asks about the membership snapshot, it returns the forged
+ * snapshot instead of the stored one, and otherwise falls through to the
+ * original method body.
+ *
+ * The key register is passed in from the caller; `v1` is used as a scratch
+ * register. The original method reads its registers on the fallthrough path
+ * only after writing them, so the hook's clobbered registers are not
+ * disturbed for the original body.
+ */
+private fun membershipSnapshotReadHook(keyRegister: Int): String {
+    val jsonLiteral = membershipSnapshotJson()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+    return """
+        if-eqz v$keyRegister, :forged
+        const-string v1, "$MEMBERSHIP_SNAPSHOT_KEY"
+        invoke-virtual {v$keyRegister, v1}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+        move-result v1
+        if-nez v1, :forged
+        invoke-virtual {v$keyRegister}, Ljava/lang/String;->isEmpty()Z
+        move-result v1
+        if-eqz v1, :original
+        :forged
+        const-string v1, "$jsonLiteral"
+        return-object v1
+        :original
+    """.trimIndent()
+}
+
+/**
+ * Smali that intercepts the secure-storage write: when the storage key asks
+ * for the membership snapshot, the value written is the forged snapshot
+ * instead of the app's own, and otherwise the write is passed through.
+ *
+ * The key register and the value register are passed in from the caller;
+ * `v2` is used as a scratch register. The original method reads its
+ * registers on the pass-through path only after writing them, so the hook's
+ * clobbered registers are not disturbed for the original body.
+ */
+private fun membershipSnapshotWriteHook(keyRegister: Int, valueRegister: Int): String {
+    val jsonLiteral = membershipSnapshotJson()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+    return """
+        if-eqz v$keyRegister, :original
+        const-string v2, "$MEMBERSHIP_SNAPSHOT_KEY"
+        invoke-virtual {v$keyRegister, v2}, Ljava/lang/String;->contains(Ljava/lang/CharSequence;)Z
+        move-result v2
+        if-eqz v2, :original
+        const-string v$valueRegister, "$jsonLiteral"
+        :original
+    """.trimIndent()
+}
 
 /**
  * The same key as the classic shared_preferences API stores it. Its Dart side
@@ -196,6 +286,26 @@ val twtAppUnlockSubscriptionPatch = bytecodePatch(
             logger.info("Bypassed ${method.definingClass}->${method.name}")
         }
 
+        // ── Layer 5: the membership snapshot in the secure storage (3.7.0+) ────
+        runCatching {
+            MembershipSnapshotReadFingerprint.method
+        }.getOrNull()?.let { method ->
+            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
+            method.addInstructions(0, membershipSnapshotReadHook(keyRegister))
+            hooks++
+            logger.info("Forged membership snapshot read in ${method.definingClass}->${method.name}")
+        }
+
+        runCatching {
+            MembershipSnapshotWriteFingerprint.method
+        }.getOrNull()?.let { method ->
+            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
+            val valueRegister = keyRegister + 1
+            method.addInstructions(0, membershipSnapshotWriteHook(keyRegister, valueRegister))
+            hooks++
+            logger.info("Forged membership snapshot write in ${method.definingClass}->${method.name}")
+        }
+
         if (hooks == 0) {
             throw PatchException(
                 "None of the subscription checks could be found. " +
@@ -264,11 +374,17 @@ private fun BytecodePatchContext.patchDataStoreMapReader(candidate: Candidate): 
     val scratch = (0 until method.localRegisterCount()).filter { it != mapRegister }
     if (scratch.size < 2) return false
 
+    val snapshotLiteral = membershipSnapshotJson()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
     method.addInstructions(
         returnIndex,
         """
         const-string v${scratch[0]}, "$SUBSCRIPTION_KEY"
         sget-object v${scratch[1]}, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
+        invoke-interface {v$mapRegister, v${scratch[0]}, v${scratch[1]}}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
+        const-string v${scratch[0]}, "$MEMBERSHIP_SNAPSHOT_KEY"
+        const-string v${scratch[1]}, "$snapshotLiteral"
         invoke-interface {v$mapRegister, v${scratch[0]}, v${scratch[1]}}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
         """.trimIndent()
     )
@@ -463,6 +579,20 @@ private fun preferencesSeedSmali(
         )
         builder.appendLine("move-result-object v0")
     }
+
+    // Also seed the forged membership snapshot string, so that a backend that
+    // hands it out as a string carries the same value.
+    val snapshotLiteral = membershipSnapshotJson()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
+    builder.appendLine("const-string v1, \"$MEMBERSHIP_SNAPSHOT_KEY\"")
+    builder.appendLine("const-string v2, \"$snapshotLiteral\"")
+    builder.appendLine(
+        "invoke-interface {v0, v1, v2}, " +
+            "Landroid/content/SharedPreferences\$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)" +
+            "Landroid/content/SharedPreferences\$Editor;"
+    )
+    builder.appendLine("move-result-object v0")
 
     builder.appendLine("invoke-interface {v0}, Landroid/content/SharedPreferences\$Editor;->apply()V")
     return builder.toString().trimEnd()
