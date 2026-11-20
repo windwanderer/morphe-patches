@@ -1,3 +1,9 @@
+## [1.11.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.7...v1.11.0-dev.8) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** splash smali - type-form iget, no const-null, success(name) ([4f61b33](https://github.com/windwanderer/morphe-patches/commit/4f61b33a64dc2e293187b3e83c92b7a2f3b0271c))
+
 ## [1.11.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.6...v1.11.0-dev.7) (2026-11-20)
 
 ### 🐛 Bug Fixes
