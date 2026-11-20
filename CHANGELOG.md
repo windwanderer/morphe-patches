@@ -1,3 +1,9 @@
+## [1.11.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.5...v1.11.0-dev.6) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** revert iget smali to validated form ([c1f320e](https://github.com/windwanderer/morphe-patches/commit/c1f320efecd99cf56ae21f29847024dd67ce6bc8))
+
 ## [1.11.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.4...v1.11.0-dev.5) (2026-11-20)
 
 ### 🐛 Bug Fixes
