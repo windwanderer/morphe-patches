@@ -227,8 +227,7 @@ private fun membershipSnapshotWriteHook(keyRegister: Int, valueRegister: Int): S
  * Injects the forged snapshot into the map that the secure-storage `readAll`
  * primitive returns, right before it is returned.
  */
-private fun BytecodePatchContext.patchInjectSnapshotIntoMap(candidate: Candidate): Boolean {
-    val method = mutableMethod(candidate) ?: return false
+private fun BytecodePatchContext.patchInjectSnapshotIntoMap(method: MutableMethod): Boolean {
     val implementation = method.implementation ?: return false
     val instructions = implementation.instructions.toList()
     val returnIndex = instructions.indexOfLast { it.opcode == Opcode.RETURN_OBJECT }
