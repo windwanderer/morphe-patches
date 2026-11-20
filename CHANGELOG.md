@@ -1,3 +1,9 @@
+## [1.11.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.10...v1.11.0-dev.11) (2026-11-20)
+
+### ✨ New Features
+
+* **twtapp:** split splash ad intercept into its own patch ([b0aecd6](https://github.com/windwanderer/morphe-patches/commit/b0aecd6db61caf92c2cdacf3dbcac9e3a2a72194))
+
 ## [1.11.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.9...v1.11.0-dev.10) (2026-11-20)
 
 ### 🐛 Bug Fixes
