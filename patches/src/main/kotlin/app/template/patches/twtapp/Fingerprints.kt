@@ -3,49 +3,14 @@ package app.template.patches.twtapp
 import app.morphe.patcher.Fingerprint
 
 /**
- * `CustomerInfoMapperKt.map(CustomerInfo)`, the Kotlin bridge that turns
- * RevenueCat's `CustomerInfo` into the map the `purchases_flutter` plugin
- * hands to Dart.
+ * The plugin's write primitive, `Lcom/google/android/gms/internal/consent_sdk/c;->x(String, String)V`.
  *
- * The class belongs to the RevenueCat SDK, not to the app, so it keeps its
- * name between releases. The fingerprint only describes the shape of the
- * method (a `CustomerInfo` in, a `Map` out), which is the contract the plugin
- * relies on, so compiler or flag changes do not break it.
- */
-val CustomerInfoMapFingerprint = Fingerprint(
-    definingClass = "Lcom/revenuecat/purchases/hybridcommon/mappers/CustomerInfoMapperKt;",
-    name = "map",
-    parameters = listOf("Lcom/revenuecat/purchases/CustomerInfo;"),
-    returnType = "Ljava/util/Map;"
-)
-
-/**
- * The read primitive of the FlutterSecureStorage plugin as obfuscated by the
- * plugin's own packer. The plugin's worker thread (`Lhc/n`) calls it to
- * decrypt the value of a read request, so it sees every value the app reads
- * — including the membership snapshot the app gates premium features on
- * since 3.7.0.
- *
- * Behavior-based: the class is in the plugin's obfuscated namespace, not the
- * app's, and its method name is stable for the plugin, so the fingerprint is
- * by shape rather than by app behavior. Behavior-based description: the
- * `String`-returning method of the plugin helper that reads a value.
- */
-val MembershipSnapshotReadFingerprint = Fingerprint(
-    definingClass = "Lcom/google/android/gms/internal/consent_sdk/c;",
-    name = "b",
-    parameters = listOf("Ljava/lang/String;"),
-    returnType = "Ljava/lang/String;"
-)
-
-/**
- * The write primitive of the FlutterSecureStorage plugin as obfuscated by the
- * plugin's own packer: the worker thread (`Lhc/n`) calls it for every write
- * request, with the storage key and the value, so it sees every key the app
- * writes — including the membership snapshot since 3.7.0.
- *
- * Behavior-based description: the `Void`-returning method of the plugin
- * helper that stores a key/value pair.
+ * The Gromore plugin class is obfuscated by the plugin's own packer and its
+ * name changes between plugin versions; the class is in the plugin's
+ * obfuscated namespace, not the app's, and the method name is stable for the
+ * plugin, so the fingerprint is by shape rather than by app behavior.
+ * Behavior-based: the `Void`-returning method of the plugin helper that
+ * stores a key/value pair, called by the plugin worker for every write.
  */
 val MembershipSnapshotWriteFingerprint = Fingerprint(
     definingClass = "Lcom/google/android/gms/internal/consent_sdk/c;",
@@ -55,16 +20,41 @@ val MembershipSnapshotWriteFingerprint = Fingerprint(
 )
 
 /**
- * PairIP's `LicenseClient.processResponse(int, Bundle)`, which applies the
- * Play license verdict.
+ * The plugin's read primitive, `Lcom/google/android/gms/internal/consent_sdk/c;->b(String)Ljava/lang/String;`.
  *
- * PairIP is injected by Play and keeps its package and method names, so this
- * fingerprint does not depend on the app's obfuscation. Builds that do not
- * ship PairIP simply skip the layer.
+ * Behavior-based: the `String`-returning method of the plugin helper that
+ * decrypts the value of a read, called by the plugin worker for every read.
  */
-val ProcessResponseFingerprint = Fingerprint(
-    definingClass = "Lcom/pairip/licensecheck/LicenseClient;",
-    name = "processResponse",
-    parameters = listOf("I", "Landroid/os/Bundle;"),
+val MembershipSnapshotReadFingerprint = Fingerprint(
+    definingClass = "Lcom/google/android/gms/internal/consent_sdk/c;",
+    name = "b",
+    parameters = listOf("Ljava/lang/String;"),
+    returnType = "Ljava/lang/String;"
+)
+
+/**
+ * The plugin's `readAll` primitive, `Lcom/google/android/gms/internal/consent_sdk/c;->s()Ljava/util/HashMap;`.
+ *
+ * Behavior-based: the `HashMap`-returning method of the plugin helper that
+ * returns the decrypted map of all stored values, called by the plugin
+ * worker for the "readAll" channel method.
+ */
+val MembershipSnapshotReadAllFingerprint = Fingerprint(
+    definingClass = "Lcom/google/android/gms/internal/consent_sdk/c;",
+    name = "s",
+    parameters = listOf(),
+    returnType = "Ljava/util/HashMap;"
+)
+
+/**
+ * The Gromore plugin's MethodChannel handler — the obfuscated `Lxi/d`
+ * serving `flutter_gromore_ads`. Its `onMethodCall` handles the
+ * `showSplashAd` channel call that makes the app show the splash page ad
+ * on open.
+ */
+val SplashAdPluginFingerprint = Fingerprint(
+    definingClass = "Lxi/d;",
+    name = "onMethodCall",
+    parameters = listOf("Lyj/n;", "Lyj/p;"),
     returnType = "V"
 )

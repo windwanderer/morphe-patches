@@ -90,19 +90,15 @@ object Constants {
         apkFileType = ApkFileType.APK, // Shipped as a single APK, arm64-v8a only.
         appIconColor = 0x0E1B2E, // Icon color in Morphe Manager. Usually the same color as the icon background.
         targets = listOf(
-            // The unlock patch spoofs RevenueCat's Kotlin bridge (which is not
-            // obfuscated) and the SharedPreferences plugin's boolean readers,
-            // and since 3.7.0 it forges the membership snapshot in the
-            // secure storage as well. Helpers that a build does not have are
-            // skipped, so the release the patch was developed against is
-            // pinned here.
+            // Pinned to the 3.7.0 release the patch was developed against.
+            // The unlock patch forges the membership snapshot that the app
+            // gates premium features on (secure storage, read/write/readAll)
+            // and intercepts the splash page ad; on other releases the
+            // layers it needs are missing, so they are skipped and the patch
+            // fails instead of leaving the app unpatched.
             AppTarget(
                 version = "3.7.0",
                 versionCodes = mapOf(SupportedAbi.ARM64_V8A to 3070000)
-            ),
-            AppTarget(
-                version = "3.5.4",
-                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 3050406)
             )
         )
     )

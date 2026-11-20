@@ -14,63 +14,52 @@ import com.android.tools.smali.dexlib2.iface.ClassDef
 import com.android.tools.smali.dexlib2.iface.Method
 import com.android.tools.smali.dexlib2.iface.instruction.OneRegisterInstruction
 import com.android.tools.smali.dexlib2.iface.instruction.ReferenceInstruction
+import com.android.tools.smali.dexlib2.iface.reference.FieldReference
 import com.android.tools.smali.dexlib2.iface.reference.MethodReference
 import java.util.logging.Logger
 
 /*
- * Stargazing Hub (TWT App) is a Flutter app whose subscription state is read
- * from several places:
+ * Stargazing Hub (TWT App) is a Flutter app whose premium state is decided by
+ * the membership snapshot.
  *
- * 1. RevenueCat's hybrid common bridge, `CustomerInfoMapperKt.map`. The
- *    purchases_flutter plugin calls it for every CustomerInfo it hands to
- *    Dart, so rewriting the returned map makes Dart believe every entitlement
- *    is active.
- * 2. The shared_preferences plugin, which stores the app's own
- *    `is_subscribed` flag. The plugin ships several backends: the classic
- *    SharedPreferences API (getAll only, the Dart side caches the values), the
- *    asynchronous SharedPreferences backend, and the asynchronous DataStore
- *    backend. All of them are seeded/faked here.
- * 3. PairIP's license client, when the build ships it.
- *
- * The patch is written to survive releases it was not built for. The app's
- * own classes are obfuscated, and the obfuscated names change between
- * releases, so nothing is matched by class or method name. Every hook is
- * found by behaviour instead:
- *
- * - the boolean reader of a backend is the `(String, ...) -> Boolean` method
- *   that calls `SharedPreferences.getBoolean`,
- * - the datastore backend is the class that owns the `data_store` Pigeon
- *   channel, and its reader is the `(String, ...) -> Boolean` method in it,
- * - the getAll hook is a `Map`-returning method that calls
- *   `SharedPreferences.getAll`, seeded through the SharedPreferences field or
- *   the `(Options) -> SharedPreferences` helper of its own class, and the
- *   datastore equivalent is the `(List, ...) -> Map` method of the same class.
- *
- * RevenueCat's and PairIP's classes come from their SDKs and keep their names.
- * A build that does not contain one of the layers skips it instead of failing
- * the whole patch; if no layer at all can be found the patch fails, so a
- * release it no longer understands is never silently left unpatched.
- *
- * 4. The FlutterSecureStorage plugin. Since 3.7.0 the app keeps its
- *    membership snapshot in the secure storage and gates premium features on
- *    a valid snapshot rather than on the legacy boolean keys alone. The
- *    plugin's write primitive (`c.x(String, String)`) stores the app's value,
- *    and its read primitive (`c.b(String)`) decrypts it; both are hooked when
- *    the storage key asks for `mainland_commerce_membership_snapshot_v1`: the
- *    write stores the forged snapshot, and the read returns it, so the
- *    app's local validation passes either way.
- * 5. The shared_preferences backends. The app reads the snapshot there too:
- *    the map readers are seeded with the same forged snapshot string, so a
- *    backend that hands it out through `readAll()` carries it as well.
+ * The patch is written for the 3.7.0 release. Every hook is found by behavior,
+ * not by the obfuscated app class names. A build that does not contain a
+ * layer skips it instead of failing the whole patch; if no layer at all can be
+ * found the patch fails, so a release it no longer understands is never
+ * silently left unpatched.
  */
 
-private const val SUBSCRIPTION_KEY = "is_subscribed"
+/** The storage key the app uses for the membership snapshot since 3.7.0. */
+private const val MEMBERSHIP_SNAPSHOT_KEY = "mainland_commerce_membership_snapshot_v1"
+
+/** The legacy backends key their entries with a "flutter." prefix. */
+private const val PREFIXED_MEMBERSHIP_SNAPSHOT_KEY = "flutter.$MEMBERSHIP_SNAPSHOT_KEY"
+
+/** The channel method the app calls to show the splash page ad. */
+private const val SPLASH_AD_CHANNEL_METHOD = "showSplashAd"
+
+private val logger = Logger.getLogger("TwtAppUnlock")
 
 /**
- * The storage key the app uses in the secure storage for the membership
- * snapshot since 3.7.0.
+ * A method that matched the shape of one of the hooks, kept as a description
+ * so it can be looked up again after other layers made its class mutable.
  */
-private const val MEMBERSHIP_SNAPSHOT_KEY = "mainland_commerce_membership_snapshot_v1"
+private class Candidate(
+    val classDef: ClassDef,
+    val name: String,
+    val parameters: List<String>,
+    val returnType: String,
+)
+
+/**
+ * How the backend reaches the SharedPreferences instance of the map readers.
+ */
+private class PreferencesAccess(
+    val fieldName: String? = null,
+    val helperName: String? = null,
+    val helperParameterType: String? = null,
+    val helperParameterIndex: Int = -1,
+)
 
 /**
  * The forged membership snapshot. The app validates a read snapshot before it
@@ -88,16 +77,109 @@ private fun membershipSnapshotJson(): String {
         "\"verifiedAt\":$verifiedAt}"
 }
 
+@Suppress("unused")
+val twtAppUnlockSubscriptionPatch = bytecodePatch(
+    name = "Unlock Subscription",
+    description = "Unlocks all subscription features in TWT App.",
+    default = true
+) {
+    compatibleWith(COMPATIBILITY_TWTApp)
+
+    execute {
+        var hooks = 0
+
+        // ── Layer 1: the membership snapshot in the secure storage ───────
+        // The plugin's write primitive stores the value; the app writes its
+        // real snapshot, we store the forged one instead.
+        runCatching {
+            MembershipSnapshotWriteFingerprint.method
+        }.getOrNull()?.let { method ->
+            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
+            val valueRegister = keyRegister + 1
+            method.addInstructions(0, membershipSnapshotWriteHook(keyRegister, valueRegister))
+            hooks++
+            logger.info("Forged membership snapshot write in ${method.definingClass}->${method.name}")
+        }
+
+        // The plugin's read primitive returns the decrypted value; we return
+        // the forged snapshot for the snapshot key.
+        runCatching {
+            MembershipSnapshotReadFingerprint.method
+        }.getOrNull()?.let { method ->
+            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
+            method.addInstructions(0, membershipSnapshotReadHook(keyRegister))
+            hooks++
+            logger.info("Forged membership snapshot read in ${method.definingClass}->${method.name}")
+        }
+
+        // ── Layer 2: the shared_preferences backends ────────────────────
+        // The map readers are seeded with the forged snapshot string, so a
+        // backend that hands it out through `readAll()` carries it as well.
+        val mapReaders = mutableListOf<Candidate>()
+        classDefForEach { classDef ->
+            classDef.methods.forEach { method ->
+                if (method.implementation == null) return@forEach
+                val parameters = method.parameterTypes.map { it.toString() }
+                val returnType = method.returnType.toString()
+                if ((returnType == MAP || returnType == HASH_MAP) &&
+                    parameters.size >= 2 &&
+                    method.calls("Landroid/content/SharedPreferences;", "getAll")) {
+                    mapReaders += classDef.candidate(method)
+                }
+            }
+        }
+        mapReaders.forEach { candidate ->
+            if (patchMapReader(candidate)) {
+                hooks++
+                logger.info("Seeded membership snapshot into ${candidate.classDef.type}->${candidate.name}")
+            }
+        }
+
+        // ── Layer 3: the secure-storage readAll ─────────────────────────
+        // The plugin's `readAll` primitive returns the decrypted map; we
+        // inject the forged snapshot into the map before it is returned.
+        runCatching {
+            MembershipSnapshotReadAllFingerprint.method
+        }.getOrNull()?.let { method ->
+            if (patchInjectSnapshotIntoMap(method)) {
+                hooks++
+                logger.info("Injected membership snapshot into ${method.definingClass}->${method.name}")
+            }
+        }
+
+        // ── Layer 4: the splash page ad on app open ─────────────────────
+        // The app calls the plugin with the method name "showSplashAd"; the
+        // intercept calls the plugin's result immediately, so the splash
+        // page ad never shows.
+        runCatching {
+            SplashAdPluginFingerprint.method
+        }.getOrNull()?.let { method ->
+            val smali = splashAdInterceptHook(method)
+            if (smali != null) {
+                method.addInstructions(0, smali)
+                hooks++
+                logger.info("Intercepted splash ad in ${method.definingClass}->${method.name}")
+            }
+        }
+
+        if (hooks == 0) {
+            throw PatchException(
+                "None of the subscription checks could be found. " +
+                    "The app's storage or billing code changed shape."
+            )
+        }
+
+        logger.info("Unlock Subscription: $hooks hook(s) applied")
+    }
+}
+
+// ── Layer 1: the membership snapshot forge ─────────────────────────────────
+
 /**
  * Smali that intercepts the secure-storage read: when the value is null,
  * empty, or asks about the membership snapshot, it returns the forged
  * snapshot instead of the stored one, and otherwise falls through to the
  * original method body.
- *
- * The key register is passed in from the caller; `v1` is used as a scratch
- * register. The original method reads its registers on the fallthrough path
- * only after writing them, so the hook's clobbered registers are not
- * disturbed for the original body.
  */
 private fun membershipSnapshotReadHook(keyRegister: Int): String {
     val jsonLiteral = membershipSnapshotJson()
@@ -123,11 +205,6 @@ private fun membershipSnapshotReadHook(keyRegister: Int): String {
  * Smali that intercepts the secure-storage write: when the storage key asks
  * for the membership snapshot, the value written is the forged snapshot
  * instead of the app's own, and otherwise the write is passed through.
- *
- * The key register and the value register are passed in from the caller;
- * `v2` is used as a scratch register. The original method reads its
- * registers on the pass-through path only after writing them, so the hook's
- * clobbered registers are not disturbed for the original body.
  */
 private fun membershipSnapshotWriteHook(keyRegister: Int, valueRegister: Int): String {
     val jsonLiteral = membershipSnapshotJson()
@@ -144,226 +221,13 @@ private fun membershipSnapshotWriteHook(keyRegister: Int, valueRegister: Int): S
     """.trimIndent()
 }
 
-/**
- * The same key as the classic shared_preferences API stores it. Its Dart side
- * strips the "flutter." prefix from everything getAll returns.
- */
-private const val PREFIXED_SUBSCRIPTION_KEY = "flutter.$SUBSCRIPTION_KEY"
-
-private const val SHARED_PREFERENCES = "Landroid/content/SharedPreferences;"
-private const val BOOLEAN = "Ljava/lang/Boolean;"
-private const val MAP = "Ljava/util/Map;"
-private const val HASH_MAP = "Ljava/util/HashMap;"
-private const val LIST = "Ljava/util/List;"
-
-/** Pigeon channel of the DataStore backed shared_preferences API. */
-private const val DATA_STORE_CHANNEL = "data_store"
-
-private val logger = Logger.getLogger("TwtAppUnlock")
+// ── Layer 3: inject the snapshot into the secure-storage readAll ───────────
 
 /**
- * A method that matched the shape of one of the hooks, kept as a description
- * so it can be looked up again after other layers made its class mutable.
+ * Injects the forged snapshot into the map that the secure-storage `readAll`
+ * primitive returns, right before it is returned.
  */
-private class Candidate(
-    val classDef: ClassDef,
-    val name: String,
-    val parameters: List<String>,
-    val returnType: String,
-)
-
-/**
- * How the hook can reach the SharedPreferences instance of its own backend:
- * either through the field the backend keeps it in, or through the helper
- * method that opens the file the backend reads.
- */
-private class PreferencesAccess(
-    val fieldName: String? = null,
-    val helperName: String? = null,
-    val helperParameterType: String? = null,
-    val helperParameterIndex: Int = -1,
-)
-
-@Suppress("unused")
-val twtAppUnlockSubscriptionPatch = bytecodePatch(
-    name = "Unlock Subscription",
-    description = "Unlocks all subscription features in TWT App.",
-    default = true
-) {
-    compatibleWith(COMPATIBILITY_TWTApp)
-
-    execute {
-        var hooks = 0
-
-        // ── Layer 1: RevenueCat's CustomerInfo bridge ────────────────────────
-        runCatching {
-            CustomerInfoMapFingerprint.method
-        }.getOrNull()?.let { method ->
-            val returnIndex = method.instructions.indexOfLast { it.opcode == Opcode.RETURN_OBJECT }
-            val returnInstruction = method.instructions.elementAtOrNull(returnIndex) as? OneRegisterInstruction
-            if (returnIndex >= 0 && returnInstruction != null && method.localRegisterCount() >= 11) {
-                method.addInstructions(returnIndex, spoofedCustomerInfo(returnInstruction.registerA))
-                hooks++
-                logger.info("Spoofed ${method.definingClass}->${method.name}")
-            } else {
-                logger.warning("RevenueCat map found, but its return does not have room for the spoof")
-            }
-        }
-
-        // ── Layer 2: the shared_preferences backends ─────────────────────────
-        val booleanReaders = mutableListOf<Candidate>()
-        val mapReaders = mutableListOf<Candidate>()
-
-        classDefForEach { classDef ->
-            classDef.methods.forEach { method ->
-                if (method.implementation == null) return@forEach
-                val parameters = method.parameterTypes.map { it.toString() }
-                val returnType = method.returnType.toString()
-
-                when {
-                    returnType == BOOLEAN &&
-                        parameters.size == 2 &&
-                        parameters[0] == "Ljava/lang/String;" &&
-                        method.calls("Landroid/content/SharedPreferences;", "getBoolean") ->
-                        booleanReaders += classDef.candidate(method)
-
-                    (returnType == MAP || returnType == HASH_MAP) &&
-                        parameters.size >= 2 &&
-                        method.calls("Landroid/content/SharedPreferences;", "getAll") ->
-                        mapReaders += classDef.candidate(method)
-                }
-            }
-        }
-
-        booleanReaders.forEach { candidate ->
-            if (patchBooleanReader(candidate)) {
-                hooks++
-                logger.info("Forced $SUBSCRIPTION_KEY in ${candidate.classDef.type}->${candidate.name}")
-            }
-        }
-
-        mapReaders.forEach { candidate ->
-            if (patchMapReader(candidate)) {
-                hooks++
-                logger.info("Seeded $SUBSCRIPTION_KEY into ${candidate.classDef.type}->${candidate.name}")
-            }
-        }
-
-        // ── Layer 3: the DataStore backed reader ─────────────────────────────
-        classDefByStrings(DATA_STORE_CHANNEL).forEach { classDef ->
-            classDef.methods.forEach { method ->
-                if (method.implementation == null) return@forEach
-                val parameters = method.parameterTypes.map { it.toString() }
-                val returnType = method.returnType.toString()
-
-                val patched = when {
-                    returnType == BOOLEAN &&
-                        parameters.size == 2 &&
-                        parameters[0] == "Ljava/lang/String;" ->
-                        patchBooleanReader(classDef.candidate(method))
-
-                    (returnType == MAP || returnType == HASH_MAP) &&
-                        parameters.size == 2 &&
-                        parameters[0] == LIST ->
-                        patchDataStoreMapReader(classDef.candidate(method))
-
-                    else -> false
-                }
-
-                if (patched) {
-                    hooks++
-                    logger.info("Forced $SUBSCRIPTION_KEY in ${classDef.type}->${method.name}")
-                }
-            }
-        }
-
-        // ── Layer 4: PairIP's license response ───────────────────────────────
-        runCatching {
-            ProcessResponseFingerprint.method
-        }.getOrNull()?.let { method ->
-            method.addInstructions(0, "return-void")
-            hooks++
-            logger.info("Bypassed ${method.definingClass}->${method.name}")
-        }
-
-        // ── Layer 5: the membership snapshot in the secure storage (3.7.0+) ────
-        runCatching {
-            MembershipSnapshotReadFingerprint.method
-        }.getOrNull()?.let { method ->
-            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
-            method.addInstructions(0, membershipSnapshotReadHook(keyRegister))
-            hooks++
-            logger.info("Forged membership snapshot read in ${method.definingClass}->${method.name}")
-        }
-
-        runCatching {
-            MembershipSnapshotWriteFingerprint.method
-        }.getOrNull()?.let { method ->
-            val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
-            val valueRegister = keyRegister + 1
-            method.addInstructions(0, membershipSnapshotWriteHook(keyRegister, valueRegister))
-            hooks++
-            logger.info("Forged membership snapshot write in ${method.definingClass}->${method.name}")
-        }
-
-        if (hooks == 0) {
-            throw PatchException(
-                "None of the subscription checks could be found. " +
-                    "The app's storage or billing code changed shape."
-            )
-        }
-
-        logger.info("Unlock Subscription: $hooks hook(s) applied")
-    }
-}
-
-/**
- * Returns true for [SUBSCRIPTION_KEY] without touching the backend.
- *
- * The key is the first declared parameter of the method, both for static and
- * instance methods: smali puts it right after the receiver.
- */
-private fun BytecodePatchContext.patchBooleanReader(candidate: Candidate): Boolean {
-    val method = mutableMethod(candidate) ?: return false
-    if (method.localRegisterCount() < 1) return false
-
-    val keyRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
-    method.addInstructions(0, booleanEarlyReturn(keyRegister, scratch = 0))
-    return true
-}
-
-/**
- * Seeds [SUBSCRIPTION_KEY] into the preferences before the backend reads them.
- *
- * Writing at the entry of getAll instead of injecting the returned map is
- * deliberate: getAll loops, and its single `return` is a branch target, so
- * instructions inserted in front of it would be skipped by every branch that
- * jumps straight to the return.
- */
-private fun BytecodePatchContext.patchMapReader(candidate: Candidate): Boolean {
-    val classDef = mutableClassDefBy(candidate.classDef)
-    val method = classDef.mutableMethod(candidate) ?: return false
-    if (method.isStatic() || method.localRegisterCount() < 3) return false
-
-    val access = classDef.preferencesAccess(method) ?: return false
-    val legacy = candidate.parameters.firstOrNull() == "Ljava/lang/String;"
-    val keys = if (legacy) {
-        listOf(PREFIXED_SUBSCRIPTION_KEY, SUBSCRIPTION_KEY)
-    } else {
-        listOf(SUBSCRIPTION_KEY)
-    }
-
-    method.addInstructions(0, preferencesSeedSmali(candidate.classDef.type, method, access, keys))
-    return true
-}
-
-/**
- * Adds [SUBSCRIPTION_KEY] to the map the DataStore backend returns.
- *
- * The method is a straight line coroutine bridge, so its return has no other
- * branches and the map can be edited in place right before returning it.
- */
-private fun BytecodePatchContext.patchDataStoreMapReader(candidate: Candidate): Boolean {
+private fun BytecodePatchContext.patchInjectSnapshotIntoMap(candidate: Candidate): Boolean {
     val method = mutableMethod(candidate) ?: return false
     val implementation = method.implementation ?: return false
     val instructions = implementation.instructions.toList()
@@ -380,9 +244,6 @@ private fun BytecodePatchContext.patchDataStoreMapReader(candidate: Candidate): 
     method.addInstructions(
         returnIndex,
         """
-        const-string v${scratch[0]}, "$SUBSCRIPTION_KEY"
-        sget-object v${scratch[1]}, Ljava/lang/Boolean;->TRUE:Ljava/lang/Boolean;
-        invoke-interface {v$mapRegister, v${scratch[0]}, v${scratch[1]}}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
         const-string v${scratch[0]}, "$MEMBERSHIP_SNAPSHOT_KEY"
         const-string v${scratch[1]}, "$snapshotLiteral"
         invoke-interface {v$mapRegister, v${scratch[0]}, v${scratch[1]}}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
@@ -391,158 +252,71 @@ private fun BytecodePatchContext.patchDataStoreMapReader(candidate: Candidate): 
     return true
 }
 
-/** The `map`, `mapper` and `all` parts of the CustomerInfo the plugin expects. */
-private fun spoofedCustomerInfo(returnRegister: Int): String {
-    val copyOriginal = if (returnRegister == 0) "" else "move-object v0, v$returnRegister"
-    return """
-        $copyOriginal
-        new-instance v1, Ljava/util/HashMap;
-        invoke-direct {v1, v0}, Ljava/util/HashMap;-><init>(Ljava/util/Map;)V
-
-        new-instance v2, Ljava/util/HashMap;
-        invoke-direct {v2}, Ljava/util/HashMap;-><init>()V
-
-        const-string v3, "identifier"
-        const-string v4, "premium"
-        invoke-interface {v2, v3, v4}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "isActive"
-        const/4 v5, 0x1
-        invoke-static {v5}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-        move-result-object v5
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "willRenew"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "periodType"
-        const-string v5, "NORMAL"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "latestPurchaseDate"
-        const-string v5, "2026-06-07T00:00:00.000Z"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "latestPurchaseDateMillis"
-        const-wide v6, 0x19ebea24000L
-        invoke-static {v6, v7}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
-        move-result-object v6
-        invoke-interface {v2, v3, v6}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "originalPurchaseDate"
-        const-string v5, "2026-06-07T00:00:00.000Z"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "originalPurchaseDateMillis"
-        invoke-interface {v2, v3, v6}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "expirationDate"
-        const-string v5, "2035-06-07T00:00:00.000Z"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "expirationDateMillis"
-        const-wide v8, 0x1e0e854d000L
-        invoke-static {v8, v9}, Ljava/lang/Long;->valueOf(J)Ljava/lang/Long;
-        move-result-object v8
-        invoke-interface {v2, v3, v8}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "store"
-        const-string v5, "PLAY_STORE"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "productIdentifier"
-        const-string v5, "premium"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "productPlanIdentifier"
-        const/4 v5, 0x0
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "isSandbox"
-        const/4 v5, 0x0
-        invoke-static {v5}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-        move-result-object v5
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "unsubscribeDetectedAt"
-        const/4 v5, 0x0
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "unsubscribeDetectedAtMillis"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "billingIssueDetectedAt"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "billingIssueDetectedAtMillis"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "ownershipType"
-        const-string v5, "PURCHASED"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "verification"
-        const-string v5, "VERIFIED"
-        invoke-interface {v2, v3, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        new-instance v3, Ljava/util/HashMap;
-        invoke-direct {v3}, Ljava/util/HashMap;-><init>()V
-
-        new-instance v5, Ljava/util/HashMap;
-        invoke-direct {v5}, Ljava/util/HashMap;-><init>()V
-        invoke-interface {v5, v4, v2}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        new-instance v10, Ljava/util/HashMap;
-        invoke-direct {v10}, Ljava/util/HashMap;-><init>()V
-        invoke-interface {v10, v4, v2}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v2, "active"
-        invoke-interface {v3, v2, v5}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v2, "all"
-        invoke-interface {v3, v2, v10}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v2, "verification"
-        const-string v4, "VERIFIED"
-        invoke-interface {v3, v2, v4}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v2, "entitlements"
-        invoke-interface {v1, v2, v3}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        new-instance v2, Ljava/util/ArrayList;
-        invoke-direct {v2}, Ljava/util/ArrayList;-><init>()V
-        const-string v3, "premium"
-        invoke-interface {v2, v3}, Ljava/util/List;->add(Ljava/lang/Object;)Z
-
-        const-string v3, "activeSubscriptions"
-        invoke-interface {v1, v3, v2}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        const-string v3, "allPurchasedProductIdentifiers"
-        invoke-interface {v1, v3, v2}, Ljava/util/Map;->put(Ljava/lang/Object;Ljava/lang/Object;)Ljava/lang/Object;
-
-        move-object v$returnRegister, v1
-        """.trimIndent()
-}
-
-/** Returns `true` when the key parameter equals [SUBSCRIPTION_KEY]. */
-private fun booleanEarlyReturn(keyRegister: Int, scratch: Int): String =
-    """
-    const-string v$scratch, "$SUBSCRIPTION_KEY"
-    invoke-virtual {v$keyRegister, v$scratch}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
-    move-result v$scratch
-    if-eqz v$scratch, :not_subscribed
-    const/4 v$scratch, 0x1
-    invoke-static {v$scratch}, Ljava/lang/Boolean;->valueOf(Z)Ljava/lang/Boolean;
-    move-result-object v$scratch
-    return-object v$scratch
-    :not_subscribed
-    """.trimIndent()
+// ── Layer 4: the splash page ad intercept ──────────────────────────────────
 
 /**
- * Writes [keys] into the backend's SharedPreferences before its original
- * body reads them. `edit().apply()` updates the in-memory map synchronously,
- * so the getAll that follows already returns the injected values.
+ * Smali that intercepts the Gromore plugin's `showSplashAd` channel call:
+ * when the app calls the plugin with the method name "showSplashAd", the
+ * intercept calls `Result.success(null)` right away, so the app proceeds and
+ * the splash page ad never shows.
+ *
+ * The register layout follows the smali convention: for an instance method
+ * the parameter registers start after the receiver, the MethodCall is the
+ * next one and the Result is the last one.
  */
+private fun splashAdInterceptHook(method: Method): String? {
+    val methodCallRegister = method.parameterStart() + if (method.isStatic()) 0 else 1
+    val resultRegister = method.parameterStart() + if (method.isStatic()) 1 else 2
+
+    // Behavioral check: the handler must read the MethodCall's method-name
+    // field and call the Result's `success`, otherwise there is nothing to
+    // intercept — e.g. the method might have been renamed or restructured.
+    val instructions = method.implementation?.instructions ?: return null
+    var readsMethodName = false
+    var callsSuccess = false
+    for (ins in instructions) {
+        when (val reference = (ins as? ReferenceInstruction)?.reference) {
+            is FieldReference ->
+                if (reference.definingClass == "Lyj/n" && reference.name == "a") readsMethodName = true
+            is MethodReference ->
+                if (reference.definingClass == "Lfi/a" && reference.name == "success") callsSuccess = true
+        }
+    }
+    if (!readsMethodName || !callsSuccess) return null
+
+    return """
+        iget-object v2, v$methodCallRegister, Lyj/n;->a
+        const-string v3, "$SPLASH_AD_CHANNEL_METHOD"
+        invoke-virtual {v3, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
+        move-result v3
+        if-eqz v3, :original
+        const-null v3
+        invoke-virtual {v$resultRegister, v3}, Lfi/a;->success(Ljava/Lang.Object;)V
+        return-void
+        :original
+    """.trimIndent()
+}
+
+// ── Layer 2: the shared_preferences backends ────────────────────────────────
+
+/** Seeds the forged snapshot into the map readers of the prefs backends. */
+private fun BytecodePatchContext.patchMapReader(candidate: Candidate): Boolean {
+    val classDef = mutableClassDefBy(candidate.classDef)
+    val method = classDef.mutableMethod(candidate) ?: return false
+    if (method.isStatic() || method.localRegisterCount() < 3) return false
+
+    val access = classDef.preferencesAccess(method) ?: return false
+    val legacy = candidate.parameters.firstOrNull() == "Ljava/lang/String;"
+    val keys = if (legacy) {
+        listOf(PREFIXED_MEMBERSHIP_SNAPSHOT_KEY, MEMBERSHIP_SNAPSHOT_KEY)
+    } else {
+        listOf(MEMBERSHIP_SNAPSHOT_KEY)
+    }
+
+    method.addInstructions(0, preferencesSeedSmali(candidate.classDef.type, method, access, keys))
+    return true
+}
+
 private fun preferencesSeedSmali(
     classType: String,
     method: MutableMethod,
@@ -569,61 +343,25 @@ private fun preferencesSeedSmali(
     builder.appendLine("invoke-interface {v0}, Landroid/content/SharedPreferences;->edit()Landroid/content/SharedPreferences\$Editor;")
     builder.appendLine("move-result-object v0")
 
+    val snapshotLiteral = membershipSnapshotJson()
+        .replace("\\", "\\\\")
+        .replace("\"", "\\\"")
     keys.forEach { key ->
         builder.appendLine("const-string v1, \"$key\"")
-        builder.appendLine("const/4 v2, 0x1")
+        builder.appendLine("const-string v2, \"$snapshotLiteral\"")
         builder.appendLine(
             "invoke-interface {v0, v1, v2}, " +
-                "Landroid/content/SharedPreferences\$Editor;->putBoolean(Ljava/lang/String;Z)" +
+                "Landroid/content/SharedPreferences\$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)" +
                 "Landroid/content/SharedPreferences\$Editor;"
         )
         builder.appendLine("move-result-object v0")
     }
 
-    // Also seed the forged membership snapshot string, so that a backend that
-    // hands it out as a string carries the same value.
-    val snapshotLiteral = membershipSnapshotJson()
-        .replace("\\", "\\\\")
-        .replace("\"", "\\\"")
-    builder.appendLine("const-string v1, \"$MEMBERSHIP_SNAPSHOT_KEY\"")
-    builder.appendLine("const-string v2, \"$snapshotLiteral\"")
-    builder.appendLine(
-        "invoke-interface {v0, v1, v2}, " +
-            "Landroid/content/SharedPreferences\$Editor;->putString(Ljava/lang/String;Ljava/lang/String;)" +
-            "Landroid/content/SharedPreferences\$Editor;"
-    )
-    builder.appendLine("move-result-object v0")
-
     builder.appendLine("invoke-interface {v0}, Landroid/content/SharedPreferences\$Editor;->apply()V")
     return builder.toString().trimEnd()
 }
 
-/** The field or helper the backend uses to open its SharedPreferences file. */
-private fun MutableClass.preferencesAccess(method: MutableMethod): PreferencesAccess? {
-    fields.firstOrNull { it.type == SHARED_PREFERENCES }?.let {
-        return PreferencesAccess(fieldName = it.name)
-    }
-
-    val parameters = method.parameterTypes.map { it.toString() }
-    methods.forEach { helper ->
-        if (helper.returnType == SHARED_PREFERENCES &&
-            helper.parameterTypes.size == 1 &&
-            !AccessFlags.STATIC.isSet(helper.accessFlags) &&
-            helper.implementation != null
-        ) {
-            val helperParameter = helper.parameterTypes.first().toString()
-            val index = parameters.indexOf(helperParameter)
-            if (index >= 0) {
-                return PreferencesAccess(
-                    helperName = helper.name,
-                    helperParameterType = helperParameter,
-                    helperParameterIndex = index,
-                )
-            }
-        }
-    }
-    return null
-}
+// ── Shared helpers ──────────────────────────────────────────────────────────
 
 private fun BytecodePatchContext.mutableMethod(candidate: Candidate): MutableMethod? =
     mutableClassDefBy(candidate.classDef).mutableMethod(candidate)
@@ -651,14 +389,41 @@ private fun Method.calls(owner: String, name: String): Boolean =
 
 private fun Method.isStatic(): Boolean = AccessFlags.STATIC.isSet(accessFlags)
 
-/** Number of parameter registers, including the receiver of an instance method. */
-private fun Method.parameterRegisterCount(): Int =
-    parameterTypes.size + if (isStatic()) 0 else 1
-
-/** First local register of the method, which is also the receiver's register. */
 private fun Method.parameterStart(): Int =
     implementation!!.registerCount - parameterRegisterCount()
 
-/** Registers the method has besides its parameters. */
 private fun Method.localRegisterCount(): Int =
     implementation!!.registerCount - parameterRegisterCount()
+
+private fun Method.parameterRegisterCount(): Int =
+    parameterTypes.size + if (isStatic()) 0 else 1
+
+private fun MutableClass.preferencesAccess(method: MutableMethod): PreferencesAccess? {
+    fields.firstOrNull { it.type == SHARED_PREFERENCES }?.let {
+        return PreferencesAccess(fieldName = it.name)
+    }
+
+    val parameters = method.parameterTypes.map { it.toString() }
+    methods.forEach { helper ->
+        if (helper.returnType == SHARED_PREFERENCES &&
+            helper.parameterTypes.size == 1 &&
+            !AccessFlags.STATIC.isSet(helper.accessFlags) &&
+            helper.implementation != null
+        ) {
+            val helperParameter = helper.parameterTypes.first().toString()
+            val index = parameters.indexOf(helperParameter)
+            if (index >= 0) {
+                return PreferencesAccess(
+                    helperName = helper.name,
+                    helperParameterType = helperParameter,
+                    helperParameterIndex = index,
+                )
+            }
+        }
+    }
+    return null
+}
+
+private const val SHARED_PREFERENCES = "Landroid/content/SharedPreferences;"
+private const val MAP = "Ljava/util/Map;"
+private const val HASH_MAP = "Ljava/util/HashMap;"
