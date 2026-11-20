@@ -1,3 +1,9 @@
+## [1.11.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.9...v1.11.0-dev.10) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** remove splash intercept diagnostics ([bb50c99](https://github.com/windwanderer/morphe-patches/commit/bb50c993bfa91d5c9c5ffc5dfd08cc1713438765))
+
 ## [1.11.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.8...v1.11.0-dev.9) (2026-11-20)
 
 ### 🐛 Bug Fixes
