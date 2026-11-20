@@ -1,3 +1,9 @@
+## [1.11.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.3...v1.11.0-dev.4) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** behavioral check + smali forms for splash intercept ([4cbc148](https://github.com/windwanderer/morphe-patches/commit/4cbc14841b1770a45096f6b9e2fdba762cd1760f))
+
 ## [1.11.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.2...v1.11.0-dev.3) (2026-11-20)
 
 ### 🐛 Bug Fixes
