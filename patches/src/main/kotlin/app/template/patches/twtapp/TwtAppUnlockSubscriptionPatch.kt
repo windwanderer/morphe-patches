@@ -284,13 +284,13 @@ private fun splashAdInterceptHook(method: Method): String? {
     if (!readsMethodName || !callsSuccess) return null
 
     return """
-        iget-object v2, v$methodCallRegister, Lyj/n;->a
+        iget-object v2, v$methodCallRegister, Lyj/n;->a:Ljava/lang/String;
         const-string v3, "$SPLASH_AD_CHANNEL_METHOD"
         invoke-virtual {v3, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
         move-result v3
         if-eqz v3, :original
         const-null v3
-        invoke-virtual {v$resultRegister, v3}, Lfi/a;->success(Ljava/Lang.Object;)V
+        invoke-virtual {v$resultRegister, v3}, Lfi/a;->success(Ljava/lang/Object;)V
         return-void
         :original
     """.trimIndent()
