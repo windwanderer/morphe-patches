@@ -305,7 +305,7 @@ private fun splashAdInterceptHook(method: Method): String? {
         invoke-virtual {v3, v2}, Ljava/lang/String;->equals(Ljava/lang/Object;)Z
         move-result v3
         if-eqz v3, :original
-        invoke-virtual {v$resultRegister, v2}, Lfi/a;->success(Ljava/lang/Object;)V
+        invoke-virtual {v2, v17}, Lfi/a;->success(Ljava/lang/Object;)V
         return-void
         :original
     """.trimIndent()
