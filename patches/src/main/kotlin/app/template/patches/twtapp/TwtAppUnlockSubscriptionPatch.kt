@@ -276,11 +276,12 @@ private fun splashAdInterceptHook(method: Method): String? {
     for (ins in instructions) {
         when (val reference = (ins as? ReferenceInstruction)?.reference) {
             is FieldReference ->
-                if (reference.definingClass == "Lyj/n" && reference.name == "a") readsMethodName = true
+                if (reference.definingClass.contains("Ly") && reference.name == "a") readsMethodName = true
             is MethodReference ->
-                if (reference.definingClass == "Lfi/a" && reference.name == "success") callsSuccess = true
+                if (reference.definingClass.contains("Lfi") && reference.name == "success") callsSuccess = true
         }
     }
+    logger.info("splashAdInterceptHook: readsMethodName=$readsMethodName callsSuccess=$callsSuccess")
     if (!readsMethodName || !callsSuccess) return null
 
     return """
