@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-10-20T11:22:58",
-  "description": "## [1.11.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.10.0...v1.11.0-dev.1) (2026-10-20)\n\n### 🐛 Bug Fixes\n\n* **twtapp:** find subscription hooks by behavior, not obfuscated names ([4f21316](https://github.com/windwanderer/morphe-patches/commit/4f213164d26bb621f4e33eba1cd3bc13becdfb40))\n\n### ✨ New Features\n\n* **twtapp:** add subscription unlock patch ([1bc5770](https://github.com/windwanderer/morphe-patches/commit/1bc577096838521400541f476c671b725694077a))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.1/patches-1.11.0-dev.1.mpp",
+  "created_at": "2026-11-20T08:01:47",
+  "description": "## [1.11.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.1...v1.11.0-dev.2) (2026-11-20)\n\n### 🐛 Bug Fixes\n\n* **twtapp:** forge the 3.7.0 membership snapshot for premium unlock ([9bea89a](https://github.com/windwanderer/morphe-patches/commit/9bea89a345bf501e60b2be4b6e4074734fea23e3))\n\n### ✨ New Features\n\n* update metservice version ([d9c7071](https://github.com/windwanderer/morphe-patches/commit/d9c70716eb79ff11cb19af17efcf73f732565f36))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.2/patches-1.11.0-dev.2.mpp",
   "signature_download_url": "",
-  "version": "1.11.0-dev.1"
+  "version": "1.11.0-dev.2"
 }

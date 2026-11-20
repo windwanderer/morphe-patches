@@ -1,3 +1,13 @@
+## [1.11.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.1...v1.11.0-dev.2) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** forge the 3.7.0 membership snapshot for premium unlock ([9bea89a](https://github.com/windwanderer/morphe-patches/commit/9bea89a345bf501e60b2be4b6e4074734fea23e3))
+
+### ✨ New Features
+
+* update metservice version ([d9c7071](https://github.com/windwanderer/morphe-patches/commit/d9c70716eb79ff11cb19af17efcf73f732565f36))
+
 ## [1.11.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.10.0...v1.11.0-dev.1) (2026-10-20)
 
 ### 🐛 Bug Fixes
