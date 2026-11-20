@@ -1,3 +1,9 @@
+## [1.11.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.8...v1.11.0-dev.9) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** call success on the iget dest register, matching the app ([cd0a3ec](https://github.com/windwanderer/morphe-patches/commit/cd0a3eca7a06a6cddce724320a170ec57f6c6cd3))
+
 ## [1.11.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.7...v1.11.0-dev.8) (2026-11-20)
 
 ### 🐛 Bug Fixes
