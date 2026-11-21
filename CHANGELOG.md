@@ -1,3 +1,9 @@
+## [1.11.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.12...v1.11.0-dev.13) (2026-11-21)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** accept BaseBundle.putBoolean in Force Paid behavioral check ([42498f2](https://github.com/windwanderer/morphe-patches/commit/42498f2c206b7664ae8460d19baa7346912beffd))
+
 ## [1.11.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.11...v1.11.0-dev.12) (2026-11-21)
 
 ### ✨ New Features
