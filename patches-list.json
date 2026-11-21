@@ -1,7 +1,35 @@
 {
   "NOTE": "Do NOT manually edit this file. This file is automatically updated when semantic release (release.yml) runs. Manually editing this file can break your releases and break third party tools that use this file.",
-  "version": "1.10.0",
+  "version": "1.11.0-dev.12",
   "patches": [
+    {
+      "name": "Force Paid Status",
+      "description": "Forces the app's paid-status flag (\"is_paid\") to true.",
+      "default": true,
+      "category": null,
+      "compatiblePackages": [
+        {
+          "packageName": "com.twtapp",
+          "name": "Stargazing Hub",
+          "description": null,
+          "apkFileType": "APK",
+          "appIconColor": "#0E1B2E",
+          "signatures": null,
+          "targets": [
+            {
+              "version": "3.7.0",
+              "versionCodes": {
+                "ARM64_V8A": 3070000
+              },
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            }
+          ]
+        }
+      ],
+      "options": []
+    },
     {
       "name": "MetService Premium",
       "description": "Enable ad-free state.",
@@ -16,6 +44,13 @@
           "appIconColor": "#FF0045",
           "signatures": null,
           "targets": [
+            {
+              "version": "2.37.1",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
             {
               "version": "2.35.1",
               "versionCodes": null,
@@ -63,6 +98,13 @@
           "appIconColor": "#FF0045",
           "signatures": null,
           "targets": [
+            {
+              "version": "2.37.1",
+              "versionCodes": null,
+              "isExperimental": false,
+              "minSdk": null,
+              "description": null
+            },
             {
               "version": "2.35.1",
               "versionCodes": null,

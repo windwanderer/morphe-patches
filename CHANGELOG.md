@@ -1,3 +1,84 @@
+## [1.11.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.11...v1.11.0-dev.12) (2026-11-21)
+
+### ✨ New Features
+
+* **twtapp:** rewrite as Force Paid Status (force is_paid=true) ([3c401d2](https://github.com/windwanderer/morphe-patches/commit/3c401d29fd20cb06880bdf2b89e05b5fb1019c4c))
+
+## [1.11.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.10...v1.11.0-dev.11) (2026-11-20)
+
+### ✨ New Features
+
+* **twtapp:** split splash ad intercept into its own patch ([b0aecd6](https://github.com/windwanderer/morphe-patches/commit/b0aecd6db61caf92c2cdacf3dbcac9e3a2a72194))
+
+## [1.11.0-dev.10](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.9...v1.11.0-dev.10) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** remove splash intercept diagnostics ([bb50c99](https://github.com/windwanderer/morphe-patches/commit/bb50c993bfa91d5c9c5ffc5dfd08cc1713438765))
+
+## [1.11.0-dev.9](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.8...v1.11.0-dev.9) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** call success on the iget dest register, matching the app ([cd0a3ec](https://github.com/windwanderer/morphe-patches/commit/cd0a3eca7a06a6cddce724320a170ec57f6c6cd3))
+
+## [1.11.0-dev.8](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.7...v1.11.0-dev.8) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** splash smali - type-form iget, no const-null, success(name) ([4f61b33](https://github.com/windwanderer/morphe-patches/commit/4f61b33a64dc2e293187b3e83c92b7a2f3b0271c))
+
+## [1.11.0-dev.7](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.6...v1.11.0-dev.7) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** splash smali - type-form iget, no const-null, success(name) ([b9bb115](https://github.com/windwanderer/morphe-patches/commit/b9bb115d0475fc829e1aa60ad5754e36ac940d74))
+
+## [1.11.0-dev.6](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.5...v1.11.0-dev.6) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** revert iget smali to validated form ([c1f320e](https://github.com/windwanderer/morphe-patches/commit/c1f320efecd99cf56ae21f29847024dd67ce6bc8))
+
+## [1.11.0-dev.5](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.4...v1.11.0-dev.5) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** robust behavioral check for splash intercept + debug log ([e181dde](https://github.com/windwanderer/morphe-patches/commit/e181dde340ef29e4a72748bc1a8f2144e2ca0c59))
+
+## [1.11.0-dev.4](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.3...v1.11.0-dev.4) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** behavioral check + smali forms for splash intercept ([4cbc148](https://github.com/windwanderer/morphe-patches/commit/4cbc14841b1770a45096f6b9e2fdba762cd1760f))
+
+## [1.11.0-dev.3](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.2...v1.11.0-dev.3) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** 3.7.0-only, forge membership snapshot, intercept splash ad ([a21d6ad](https://github.com/windwanderer/morphe-patches/commit/a21d6ad94acd0306b4b087bb902207410795fab7))
+* **twtapp:** fix patchInjectSnapshotIntoMap signature for c.s() call ([dd8df74](https://github.com/windwanderer/morphe-patches/commit/dd8df74c22bf535bd92b64608c7fa31657c61ed8))
+
+## [1.11.0-dev.2](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.1...v1.11.0-dev.2) (2026-11-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** forge the 3.7.0 membership snapshot for premium unlock ([9bea89a](https://github.com/windwanderer/morphe-patches/commit/9bea89a345bf501e60b2be4b6e4074734fea23e3))
+
+### ✨ New Features
+
+* update metservice version ([d9c7071](https://github.com/windwanderer/morphe-patches/commit/d9c70716eb79ff11cb19af17efcf73f732565f36))
+
+## [1.11.0-dev.1](https://github.com/windwanderer/morphe-patches/compare/v1.10.0...v1.11.0-dev.1) (2026-10-20)
+
+### 🐛 Bug Fixes
+
+* **twtapp:** find subscription hooks by behavior, not obfuscated names ([4f21316](https://github.com/windwanderer/morphe-patches/commit/4f213164d26bb621f4e33eba1cd3bc13becdfb40))
+
+### ✨ New Features
+
+* **twtapp:** add subscription unlock patch ([1bc5770](https://github.com/windwanderer/morphe-patches/commit/1bc577096838521400541f476c671b725694077a))
+
 ## [1.10.0](https://github.com/windwanderer/morphe-patches/compare/v1.9.0...v1.10.0) (2026-10-20)
 
 ### ✨ New Features
