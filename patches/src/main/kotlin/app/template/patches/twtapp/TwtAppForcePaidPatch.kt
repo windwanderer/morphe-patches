@@ -21,7 +21,8 @@ import java.util.logging.Logger
  * true makes the app believe it is paid.
  *
  * The hook is found by behavior: the method must call
- * `Landroid/os/Bundle;->putBoolean` (the "is_paid" write).
+ * `Landroid/os/Bundle;->putBoolean` / `Landroid/os/BaseBundle;->putBoolean`
+ * (the "is_paid" write).
  */
 
 private val logger = Logger.getLogger("TwtAppForcePaid")
@@ -48,10 +49,11 @@ val twtAppForcePaidPatch = bytecodePatch(
     execute {
         val method = ForcePaidFingerprint.method ?: return@execute
 
-        // Behavioral check: the method must write "is_paid" via Bundle.putBoolean.
+        // Behavioral check: the method must write "is_paid" via Bundle/BaseBundle.putBoolean.
         val callsPutBoolean = method.implementation?.instructions?.any { ins ->
             val ref = (ins as? ReferenceInstruction)?.reference as? MethodReference
-            ref != null && ref.definingClass == "Landroid/os/Bundle;" && ref.name == "putBoolean"
+            ref != null && ref.name == "putBoolean" &&
+                (ref.definingClass == "Landroid/os/Bundle;" || ref.definingClass == "Landroid/os/BaseBundle;")
         } == true
         if (!callsPutBoolean) return@execute
 
