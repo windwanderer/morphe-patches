@@ -15,7 +15,22 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.11.0-dev.11](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.11)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
+> **[v1.11.0-dev.12](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.12)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+<details open>
+<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<br>
+
+**🎯 Supported versions:**
+
+| 3.7.0 |
+| :---: |
+
+| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
+|----------|----------------|-----------|
+| [Force Paid Status](#force-paid-status) | Forces the app's paid-status flag ("is_paid") to true. |  |
+
+</details>
+
 <details open>
 <summary>📦 MetService&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
@@ -29,22 +44,6 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 |----------|----------------|-----------|
 | [MetService Premium](#metservice-premium) | Enable ad-free state. |  |
 | [MetService Remove Splash Delay](#metservice-remove-splash-delay) | Remove the 2-second splash delay. |  |
-
-</details>
-
-<details open>
-<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
-<br>
-
-**🎯 Supported versions:**
-
-| 3.7.0 |
-| :---: |
-
-| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
-|----------|----------------|-----------|
-| [Splash Ad Intercept](#splash-ad-intercept) | Intercepts the TWT App splash page ad on app open. |  |
-| [Unlock Subscription](#unlock-subscription) | Unlocks all subscription features in TWT App. |  |
 
 </details>
 

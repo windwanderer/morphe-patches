@@ -1,7 +1,7 @@
 {
-  "created_at": "2026-11-20T21:45:24",
-  "description": "## [1.11.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.10...v1.11.0-dev.11) (2026-11-20)\n\n### ✨ New Features\n\n* **twtapp:** split splash ad intercept into its own patch ([b0aecd6](https://github.com/windwanderer/morphe-patches/commit/b0aecd6db61caf92c2cdacf3dbcac9e3a2a72194))",
-  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.11/patches-1.11.0-dev.11.mpp",
+  "created_at": "2026-11-21T07:09:59",
+  "description": "## [1.11.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.11...v1.11.0-dev.12) (2026-11-21)\n\n### ✨ New Features\n\n* **twtapp:** rewrite as Force Paid Status (force is_paid=true) ([3c401d2](https://github.com/windwanderer/morphe-patches/commit/3c401d29fd20cb06880bdf2b89e05b5fb1019c4c))",
+  "download_url": "https://github.com/windwanderer/morphe-patches/releases/download/v1.11.0-dev.12/patches-1.11.0-dev.12.mpp",
   "signature_download_url": "",
-  "version": "1.11.0-dev.11"
+  "version": "1.11.0-dev.12"
 }

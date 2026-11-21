@@ -1,3 +1,9 @@
+## [1.11.0-dev.12](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.11...v1.11.0-dev.12) (2026-11-21)
+
+### ✨ New Features
+
+* **twtapp:** rewrite as Force Paid Status (force is_paid=true) ([3c401d2](https://github.com/windwanderer/morphe-patches/commit/3c401d29fd20cb06880bdf2b89e05b5fb1019c4c))
+
 ## [1.11.0-dev.11](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.10...v1.11.0-dev.11) (2026-11-20)
 
 ### ✨ New Features
