@@ -1,3 +1,9 @@
+## [1.11.0-dev.15](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.14...v1.11.0-dev.15) (2026-11-22)
+
+### 🐛 Bug Fixes
+
+* remove twtapp ([ab7f459](https://github.com/windwanderer/morphe-patches/commit/ab7f4598845c5ae9809ecf44a9626d64cb696532))
+
 ## [1.11.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.13...v1.11.0-dev.14) (2026-11-22)
 
 ### ✨ New Features

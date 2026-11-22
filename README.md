@@ -19,56 +19,12 @@ Click the button below, or manually add this repo url to Morphe Manager: https:/
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.11.0-dev.14](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.14)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
-<details open>
-<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
-<br>
+> **[v1.11.0-dev.15](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.15)**&nbsp;&nbsp;&middot;&nbsp;&nbsp;`dev`&nbsp;&nbsp;&middot;&nbsp;&nbsp;**5 patches** across **2 apps**&nbsp;&nbsp;&middot;&nbsp;&nbsp;[Full details](PATCHES.md)
 
-**🎯 Supported versions:**
-
-| 3.7.0 |
-| :---: |
-
-| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
-|----------|----------------|-----------|
-| [Force Paid Status](#force-paid-status) | Forces the app's paid-status flag ("is_paid") to true. |  |
-| [Skip Splash Screen](#skip-splash-screen) | Removes the app's startup splash screen by removing the SplashScreenView immediately. |  |
-
-</details>
-
-<details open>
-<summary>📦 MetService&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
-<br>
-
-**🎯 Supported versions:**
-
-| 2.37.1 | 2.35.1 | 2.35.0 | 2.34.1 | 2.33.0 |
-| :---: | :---: | :---: | :---: | :---: |
-
-| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
-|----------|----------------|-----------|
-| [MetService Premium](#metservice-premium) | Enable ad-free state. |  |
-| [MetService Remove Splash Delay](#metservice-remove-splash-delay) | Remove the 2-second splash delay. |  |
-
-</details>
-
-<details open>
-<summary>📦 Stellarium&nbsp;&nbsp;•&nbsp;&nbsp;3 patches</summary>
-<br>
-
-**🎯 Supported versions:**
-
-| 1.16.8 | 1.16.7 | 1.16.5 | 1.16.3 |
-| :---: | :---: | :---: | :---: |
-
-| 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
-|----------|----------------|-----------|
-| [Stellarium Extended Catalog](#stellarium-extended-catalog) | Import a locally downloaded extended catalog ZIP instead of waiting for a Play Asset Delivery download that a sideloaded install can never receive. Nothing is downloaded and nothing is requested at launch; without a ZIP the app is unchanged. Enabled by default; turn it off in Expert mode if you do not want the ZIP entry. |  |
-| [Stellarium Extended Catalog (ZIP support)](#stellarium-extended-catalog-zip-support) | Adds the "open with" and share-sheet entries that let Stellarium receive a locally downloaded extended catalog ZIP. Used by Stellarium Extended Catalog. |  |
-| [Stellarium Premium](#stellarium-premium) | Unlock Stellarium Plus by patching the native license checks, and skip the Play data pack request a sideloaded install cannot satisfy (arm64-v8a and armeabi-v7a). |  |
-
-</details>
-
+| # | App | Patches | Version | Package |
+|---|---|---|---|---|
+| 1 | [**MetService**](PATCHES.md#metservice-commetservicekryten) | 2 | `2.37.1`, `2.35.1`, `2.35.0`, `2.34.1`, `2.33.0` | [`com.metservice.kryten`](https://play.google.com/store/apps/details?id=com.metservice.kryten) |
+| 2 | [**Stellarium**](PATCHES.md#stellarium-comnoctuasoftwarestellarium_free) | 3 | `1.16.8`, `1.16.7`, `1.16.5`, `1.16.3` | [`com.noctuasoftware.stellarium_free`](https://play.google.com/store/apps/details?id=com.noctuasoftware.stellarium_free) |
 <!-- PATCHES_END -->
 
 ### 🛠️ Building locally
