@@ -15,9 +15,9 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 ## 🩹 Patches list
 
 <!-- PATCHES_START EXPANDED -->
-> **[v1.11.0-dev.13](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.13)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;6 patches total
+> **[v1.11.0-dev.14](https://github.com/windwanderer/morphe-patches/releases/tag/v1.11.0-dev.14)**&nbsp;&nbsp;•&nbsp;&nbsp;`dev`&nbsp;&nbsp;•&nbsp;&nbsp;7 patches total
 <details open>
-<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;1 patch</summary>
+<summary>📦 Stargazing Hub&nbsp;&nbsp;•&nbsp;&nbsp;2 patches</summary>
 <br>
 
 **🎯 Supported versions:**
@@ -28,6 +28,7 @@ Click here to add these patches to Morphe: https://morphe.software/add-source?gi
 | 💊&nbsp;Patch | 📜&nbsp;Description | ⚙️&nbsp;Options |
 |----------|----------------|-----------|
 | [Force Paid Status](#force-paid-status) | Forces the app's paid-status flag ("is_paid") to true. |  |
+| [Skip Splash Screen](#skip-splash-screen) | Removes the app's startup splash screen by removing the SplashScreenView immediately. |  |
 
 </details>
 

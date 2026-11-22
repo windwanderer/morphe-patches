@@ -1,3 +1,9 @@
+## [1.11.0-dev.14](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.13...v1.11.0-dev.14) (2026-11-22)
+
+### ✨ New Features
+
+* **twtapp:** add Skip Splash Screen patch (removes the SplashScreenView immediately) ([5f3fe96](https://github.com/windwanderer/morphe-patches/commit/5f3fe967303a8be18614aedeebbb3afe4e3c123d))
+
 ## [1.11.0-dev.13](https://github.com/windwanderer/morphe-patches/compare/v1.11.0-dev.12...v1.11.0-dev.13) (2026-11-21)
 
 ### 🐛 Bug Fixes
