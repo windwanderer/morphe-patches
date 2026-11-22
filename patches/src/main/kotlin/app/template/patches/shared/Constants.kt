@@ -84,22 +84,4 @@ object Constants {
         )
     )
 
-    val COMPATIBILITY_TWTApp = Compatibility(
-        name = "Stargazing Hub", // App name as it appears in the Android launcher.
-        packageName = "com.twtapp",
-        apkFileType = ApkFileType.APK, // Shipped as a single APK, arm64-v8a only.
-        appIconColor = 0x0E1B2E, // Icon color in Morphe Manager. Usually the same color as the icon background.
-        targets = listOf(
-            // Pinned to the 3.7.0 release the patch was developed against.
-            // The unlock patch forges the membership snapshot that the app
-            // gates premium features on (secure storage, read/write/readAll)
-            // and intercepts the splash page ad; on other releases the
-            // layers it needs are missing, so they are skipped and the patch
-            // fails instead of leaving the app unpatched.
-            AppTarget(
-                version = "3.7.0",
-                versionCodes = mapOf(SupportedAbi.ARM64_V8A to 3070000)
-            )
-        )
-    )
 }
